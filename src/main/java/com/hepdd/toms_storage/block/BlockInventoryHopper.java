@@ -49,11 +49,6 @@ public class BlockInventoryHopper extends BlockContainer {
     }
 
     @Override
-    public int getRenderType() {
-        return ModRegistry.hopperRenderId;
-    }
-
-    @Override
     public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
         setBoundsForFacing(ForgeDirection.getOrientation(world.getBlockMetadata(x, y, z)));
     }

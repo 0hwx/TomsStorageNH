@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "": { "model": "tomsstorage:block/inventory_connector" }
+    }
+}

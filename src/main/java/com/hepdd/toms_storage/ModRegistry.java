@@ -33,9 +33,7 @@ public final class ModRegistry {
     public static Block inventoryCable;
     public static Block inventoryHopper;
     public static Item wirelessTerminal;
-    public static int terminalRenderId;
     public static int cableRenderId;
-    public static int hopperRenderId;
 
     public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(TomsStorageMod.MODID) {
 

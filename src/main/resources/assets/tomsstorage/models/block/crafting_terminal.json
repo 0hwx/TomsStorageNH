@@ -1,0 +1,6 @@
+{
+    "parent": "tomsstorage:block/storage_terminal",
+    "textures": {
+        "2": "tomsstorage:block/crafting_terminal_front"
+    }
+}

@@ -116,14 +116,15 @@ public class TileEntityStorageTerminal extends TileEntity {
     }
 
     protected IStorageInventory getAttachedInventory() {
-        ForgeDirection facing = BlockStorageTerminal.getFacing(worldObj.getBlockMetadata(xCoord, yCoord, zCoord));
+        ForgeDirection attach = BlockStorageTerminal
+            .getAttachDirection(worldObj.getBlockMetadata(xCoord, yCoord, zCoord));
         TileEntity tile = worldObj
-            .getTileEntity(xCoord + facing.offsetX, yCoord + facing.offsetY, zCoord + facing.offsetZ);
+            .getTileEntity(xCoord + attach.offsetX, yCoord + attach.offsetY, zCoord + attach.offsetZ);
         if (tile instanceof TileEntityInventoryConnector) {
             return ((TileEntityInventoryConnector) tile).getStorageInventory();
         }
         if (tile instanceof IInventory) {
-            return new InventoryAdapter((IInventory) tile, facing.getOpposite());
+            return new InventoryAdapter((IInventory) tile, attach.getOpposite());
         }
         return null;
     }

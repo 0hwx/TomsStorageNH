@@ -12,11 +12,6 @@ public class BlockCraftingTerminal extends BlockStorageTerminal {
     }
 
     @Override
-    protected String getFrontTextureName() {
-        return "tomsstorage:crafting_terminal";
-    }
-
-    @Override
     public TileEntity createNewTileEntity(World world, int metadata) {
         return new TileEntityCraftingTerminal();
     }

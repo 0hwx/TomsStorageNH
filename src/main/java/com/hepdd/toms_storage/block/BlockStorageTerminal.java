@@ -7,7 +7,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -18,19 +17,57 @@ import com.hepdd.toms_storage.TomsStorageMod;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
 public class BlockStorageTerminal extends BlockContainer {
 
-    @SideOnly(Side.CLIENT)
-    private IIcon frontIcon;
+    public enum MountPos {
 
-    @SideOnly(Side.CLIENT)
-    private IIcon sideIcon;
+        CENTER(0, null, "center"), // wall mount, screen upright; attach direction comes from the facing
+        UP(1, ForgeDirection.DOWN, "up"), // floor mount, screen tilted up
+        DOWN(2, ForgeDirection.UP, "down"); // ceiling mount, screen tilted down
 
-    @SideOnly(Side.CLIENT)
-    private IIcon topIcon;
+        private final int index;
+        private final ForgeDirection attach;
+        private final String variant;
+
+        MountPos(int index, ForgeDirection attach, String variant) {
+            this.index = index;
+            this.attach = attach;
+            this.variant = variant;
+        }
+
+        public int toMeta() {
+            return index << 2;
+        }
+
+        public ForgeDirection attachDirection() {
+            return attach;
+        }
+
+        public String variant() {
+            return variant;
+        }
+
+        public static MountPos fromMeta(int metadata) {
+            switch ((metadata >> 2) & 3) {
+                case 1:
+                    return UP;
+                case 2:
+                    return DOWN;
+                default:
+                    return CENTER;
+            }
+        }
+
+        public static MountPos fromVariant(String variant) {
+            for (MountPos pos : values()) {
+                if (pos.variant.equals(variant)) return pos;
+            }
+            return CENTER;
+        }
+    }
+
+    private static final ForgeDirection[] HORIZONTAL = { ForgeDirection.NORTH, ForgeDirection.EAST,
+        ForgeDirection.SOUTH, ForgeDirection.WEST };
 
     public BlockStorageTerminal() {
         super(Material.wood);
@@ -39,26 +76,6 @@ public class BlockStorageTerminal extends BlockContainer {
         setHardness(3.0F);
         setResistance(5.0F);
         setCreativeTab(ModRegistry.CREATIVE_TAB);
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void registerBlockIcons(net.minecraft.client.renderer.texture.IIconRegister register) {
-        blockIcon = register.registerIcon(getTextureName());
-        frontIcon = register.registerIcon(getFrontTextureName());
-        sideIcon = register.registerIcon("tomsstorage:terminal_side");
-        topIcon = register.registerIcon("tomsstorage:terminal_top");
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public IIcon getIcon(int side, int metadata) {
-        ForgeDirection facing = getFacing(metadata);
-        ForgeDirection sideDirection = ForgeDirection.getOrientation(side);
-        if (sideDirection == facing) return frontIcon;
-        if (sideDirection == facing.getOpposite()) return blockIcon;
-        if (sideDirection == ForgeDirection.UP || sideDirection == ForgeDirection.DOWN) return topIcon;
-        return sideIcon;
     }
 
     @Override
@@ -72,11 +89,6 @@ public class BlockStorageTerminal extends BlockContainer {
     }
 
     @Override
-    public int getRenderType() {
-        return ModRegistry.terminalRenderId;
-    }
-
-    @Override
     public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
         setBlockBoundsBasedOnState(world, x, y, z);
         return super.getCollisionBoundingBoxFromPool(world, x, y, z);
@@ -84,12 +96,12 @@ public class BlockStorageTerminal extends BlockContainer {
 
     @Override
     public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
-        setBoundsForFacing(getFacing(world.getBlockMetadata(x, y, z)));
+        setBoundsForAttach(getAttachDirection(world.getBlockMetadata(x, y, z)));
     }
 
     @Override
     public void setBlockBoundsForItemRender() {
-        setBoundsForFacing(ForgeDirection.NORTH);
+        setBoundsForAttach(ForgeDirection.NORTH);
     }
 
     @Override
@@ -113,29 +125,46 @@ public class BlockStorageTerminal extends BlockContainer {
     public int onBlockPlaced(World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ,
         int metadata) {
         ForgeDirection clickedSide = ForgeDirection.getOrientation(side);
-        if (clickedSide.offsetY == 0 && clickedSide != ForgeDirection.UNKNOWN) {
-            return clickedSide.getOpposite()
-                .ordinal();
-        }
+        ForgeDirection attach = clickedSide.getOpposite();
+        if (attach == ForgeDirection.DOWN) return MountPos.UP.toMeta();
+        if (attach == ForgeDirection.UP) return MountPos.DOWN.toMeta();
+        if (clickedSide.offsetY == 0 && clickedSide != ForgeDirection.UNKNOWN) return facingIndex(clickedSide);
         return metadata;
     }
 
     @Override
     public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack) {
-        ForgeDirection facing = getFacing(world.getBlockMetadata(x, y, z));
-        if (facing.offsetY != 0) {
-            facing = ForgeDirection.getOrientation(determineFacing(entity));
-            world.setBlockMetadataWithNotify(x, y, z, facing.ordinal(), 2);
+        int metadata = world.getBlockMetadata(x, y, z);
+        MountPos pos = MountPos.fromMeta(metadata);
+        if (pos != MountPos.CENTER) {
+            world.setBlockMetadataWithNotify(x, y, z, pos.toMeta() | horizontalIndex(entity), 2);
         }
     }
 
     public static ForgeDirection getFacing(int metadata) {
-        ForgeDirection direction = ForgeDirection.getOrientation(metadata);
-        return direction == ForgeDirection.UNKNOWN ? ForgeDirection.NORTH : direction;
+        return HORIZONTAL[metadata & 3];
     }
 
-    private void setBoundsForFacing(ForgeDirection facing) {
-        switch (facing) {
+    public static int facingIndex(ForgeDirection direction) {
+        for (int i = 0; i < HORIZONTAL.length; i++) {
+            if (HORIZONTAL[i] == direction) return i;
+        }
+        return 0;
+    }
+
+    public static ForgeDirection getAttachDirection(int metadata) {
+        MountPos pos = MountPos.fromMeta(metadata);
+        return pos == MountPos.CENTER ? getFacing(metadata).getOpposite() : pos.attachDirection();
+    }
+
+
+
+    private static int horizontalIndex(EntityLivingBase entity) {
+        return (int) Math.floor(entity.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
+    }
+
+    private void setBoundsForAttach(ForgeDirection attach) {
+        switch (attach) {
             case SOUTH:
                 setBlockBounds(0.0F, 0.0F, 0.625F, 1.0F, 1.0F, 1.0F);
                 break;
@@ -145,30 +174,16 @@ public class BlockStorageTerminal extends BlockContainer {
             case WEST:
                 setBlockBounds(0.0F, 0.0F, 0.0F, 0.375F, 1.0F, 1.0F);
                 break;
+            case UP:
+                setBlockBounds(0.0F, 0.625F, 0.0F, 1.0F, 1.0F, 1.0F);
+                break;
+            case DOWN:
+                setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.375F, 1.0F);
+                break;
             case NORTH:
             default:
                 setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.375F);
                 break;
-        }
-    }
-
-    protected String getFrontTextureName() {
-        return "tomsstorage:storage_terminal";
-    }
-
-    private int determineFacing(EntityLivingBase entity) {
-        int direction = (int) Math.floor(entity.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
-        switch (direction) {
-            case 0:
-                return ForgeDirection.NORTH.ordinal();
-            case 1:
-                return ForgeDirection.EAST.ordinal();
-            case 2:
-                return ForgeDirection.SOUTH.ordinal();
-            case 3:
-                return ForgeDirection.WEST.ordinal();
-            default:
-                return ForgeDirection.NORTH.ordinal();
         }
     }
 }

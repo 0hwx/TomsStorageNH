@@ -1,13 +1,19 @@
 package com.hepdd.toms_storage;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.Container;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.blockstate.core.BlockProperty;
+import com.gtnewhorizon.gtnhlib.blockstate.properties.DirectionBlockProperty;
+import com.gtnewhorizon.gtnhlib.blockstate.registry.BlockPropertyRegistry;
+import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
+import com.hepdd.toms_storage.block.BlockStorageTerminal.MountPos;
 import com.hepdd.toms_storage.client.ConnectorRangePreview;
 import com.hepdd.toms_storage.client.RenderInventoryCableBlock;
-import com.hepdd.toms_storage.client.RenderInventoryHopperBlock;
-import com.hepdd.toms_storage.client.RenderTerminalBlock;
+import com.hepdd.toms_storage.client.model.TerminalStateProperties;
 import com.hepdd.toms_storage.gui.ContainerStorageTerminal;
 import com.hepdd.toms_storage.nei.NEIDebug;
 import com.hepdd.toms_storage.network.PacketAutoCraftResult;
@@ -22,17 +28,29 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent event) {
-        ModRegistry.terminalRenderId = RenderingRegistry.getNextAvailableRenderId();
         ModRegistry.cableRenderId = RenderingRegistry.getNextAvailableRenderId();
-        ModRegistry.hopperRenderId = RenderingRegistry.getNextAvailableRenderId();
-        RenderingRegistry.registerBlockHandler(new RenderTerminalBlock());
         RenderingRegistry.registerBlockHandler(new RenderInventoryCableBlock());
-        RenderingRegistry.registerBlockHandler(new RenderInventoryHopperBlock());
         MinecraftForge.EVENT_BUS.register(ConnectorRangePreview.INSTANCE);
         FMLCommonHandler.instance()
             .bus()
             .register(ConnectorRangePreview.INSTANCE);
         super.preInit(event);
+        registerJsonModels();
+    }
+
+    private void registerJsonModels() {
+        ModelRegistry.registerModid(TomsStorageMod.MODID);
+
+        BlockProperty<ForgeDirection> terminalFacing = TerminalStateProperties.facing();
+        BlockProperty<String> terminalPos = TerminalStateProperties.pos();
+        for (Block terminal : new Block[] { ModRegistry.storageTerminal, ModRegistry.craftingTerminal }) {
+            BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalFacing, ForgeDirection.NORTH);
+            BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalPos, MountPos.CENTER.variant());
+        }
+        BlockPropertyRegistry.registerBlockItemProperty(
+            ModRegistry.inventoryHopper,
+            DirectionBlockProperty.facing(),
+            ForgeDirection.DOWN);
     }
 
     @Override

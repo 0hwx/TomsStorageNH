@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "facing=down": { "model": "tomsstorage:block/inventory_hopper" },
+        "facing=up": { "model": "tomsstorage:block/inventory_hopper", "x": 180 },
+        "facing=north": { "model": "tomsstorage:block/inventory_hopper", "x": 90, "y": 180 },
+        "facing=south": { "model": "tomsstorage:block/inventory_hopper", "x": 90 },
+        "facing=east": { "model": "tomsstorage:block/inventory_hopper", "y": 270, "x": 90 },
+        "facing=west": { "model": "tomsstorage:block/inventory_hopper", "y": 90, "x": 90 }
+    }
+}

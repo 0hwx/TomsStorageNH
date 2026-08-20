@@ -2,6 +2,7 @@ package com.hepdd.toms_storage.item;
 
 import java.util.List;
 
+import com.hepdd.toms_storage.TomsStorage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,7 +15,6 @@ import net.minecraft.world.World;
 import com.hepdd.toms_storage.Config;
 import com.hepdd.toms_storage.GuiHandler;
 import com.hepdd.toms_storage.ModRegistry;
-import com.hepdd.toms_storage.TomsStorageMod;
 import com.hepdd.toms_storage.client.TooltipHelper;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
@@ -147,7 +147,7 @@ public class ItemWirelessTerminal extends Item {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.missing"));
             return;
         }
-        player.openGui(TomsStorageMod.instance, getGuiId(tile), world, x, y, z);
+        player.openGui(TomsStorage.instance, getGuiId(tile), world, x, y, z);
     }
 
     private void openTarget(World world, EntityPlayer player, int x, int y, int z, TileEntity tile) {
@@ -155,7 +155,7 @@ public class ItemWirelessTerminal extends Item {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.too_far"));
             return;
         }
-        player.openGui(TomsStorageMod.instance, getGuiId(tile), world, x, y, z);
+        player.openGui(TomsStorage.instance, getGuiId(tile), world, x, y, z);
     }
 
     private int getGuiId(TileEntity tile) {

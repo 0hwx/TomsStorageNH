@@ -1,6 +1,6 @@
 package com.hepdd.toms_storage.network;
 
-import com.hepdd.toms_storage.TomsStorageMod;
+import com.hepdd.toms_storage.TomsStorage;
 
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -75,7 +75,7 @@ public class PacketConnectorRangePreview implements IMessage {
 
         @Override
         public IMessage onMessage(PacketConnectorRangePreview message, MessageContext ctx) {
-            TomsStorageMod.proxy.handleConnectorRangePreview(message);
+            TomsStorage.proxy.handleConnectorRangePreview(message);
             return null;
         }
     }

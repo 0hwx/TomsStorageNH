@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.mixin.nei;
+package com.hepdd.toms_storage.mixin.late.nei;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;

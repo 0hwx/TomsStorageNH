@@ -17,7 +17,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void init() {
-        channel = NetworkRegistry.INSTANCE.newSimpleChannel(TomsStorageMod.NETWORK_CHANNEL);
+        channel = NetworkRegistry.INSTANCE.newSimpleChannel(TomsStorage.NETWORK_CHANNEL);
         channel.registerMessage(PacketTerminalAction.Handler.class, PacketTerminalAction.class, 0, Side.SERVER);
         channel.registerMessage(PacketTerminalData.Handler.class, PacketTerminalData.class, 1, Side.CLIENT);
         channel.registerMessage(PacketAutoCraftRequest.Handler.class, PacketAutoCraftRequest.class, 2, Side.SERVER);

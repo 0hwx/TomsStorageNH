@@ -2,7 +2,7 @@ package com.hepdd.toms_storage.network;
 
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.hepdd.toms_storage.TomsStorageMod;
+import com.hepdd.toms_storage.TomsStorage;
 
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
@@ -57,7 +57,7 @@ public class PacketAutoCraftResult implements IMessage {
 
         @Override
         public IMessage onMessage(PacketAutoCraftResult message, MessageContext ctx) {
-            TomsStorageMod.proxy.handleAutoCraftResult(message);
+            TomsStorage.proxy.handleAutoCraftResult(message);
             return null;
         }
     }

@@ -35,7 +35,7 @@ public final class ModRegistry {
     public static Item wirelessTerminal;
     public static int cableRenderId;
 
-    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(TomsStorageMod.MODID) {
+    public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(TomsStorage.MODID) {
 
         @Override
         public Item getTabIconItem() {
@@ -61,11 +61,11 @@ public final class ModRegistry {
         GameRegistry.registerBlock(inventoryCable, ItemBlockWithTooltip.class, "inventory_cable");
         GameRegistry.registerBlock(inventoryHopper, ItemBlockWithTooltip.class, "inventory_hopper");
         GameRegistry.registerItem(wirelessTerminal, "wireless_terminal");
-        GameRegistry.registerTileEntity(TileEntityCraftingTerminal.class, TomsStorageMod.MODID + ":crafting_terminal");
+        GameRegistry.registerTileEntity(TileEntityCraftingTerminal.class, TomsStorage.MODID + ":crafting_terminal");
         GameRegistry
-            .registerTileEntity(TileEntityInventoryConnector.class, TomsStorageMod.MODID + ":inventory_connector");
-        GameRegistry.registerTileEntity(TileEntityStorageTerminal.class, TomsStorageMod.MODID + ":storage_terminal");
-        GameRegistry.registerTileEntity(TileEntityInventoryHopper.class, TomsStorageMod.MODID + ":inventory_hopper");
+            .registerTileEntity(TileEntityInventoryConnector.class, TomsStorage.MODID + ":inventory_connector");
+        GameRegistry.registerTileEntity(TileEntityStorageTerminal.class, TomsStorage.MODID + ":storage_terminal");
+        GameRegistry.registerTileEntity(TileEntityInventoryHopper.class, TomsStorage.MODID + ":inventory_hopper");
     }
 
     public static void init() {

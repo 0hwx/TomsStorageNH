@@ -1,5 +1,6 @@
 package com.hepdd.toms_storage.block;
 
+import com.hepdd.toms_storage.TomsStorage;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
@@ -13,7 +14,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.hepdd.toms_storage.GuiHandler;
 import com.hepdd.toms_storage.ModRegistry;
-import com.hepdd.toms_storage.TomsStorageMod;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
 
@@ -116,7 +116,7 @@ public class BlockStorageTerminal extends BlockContainer {
             TileEntity tile = world.getTileEntity(x, y, z);
             int guiId = tile instanceof TileEntityCraftingTerminal ? GuiHandler.CRAFTING_TERMINAL
                 : GuiHandler.STORAGE_TERMINAL;
-            player.openGui(TomsStorageMod.instance, guiId, world, x, y, z);
+            player.openGui(TomsStorage.instance, guiId, world, x, y, z);
         }
         return true;
     }

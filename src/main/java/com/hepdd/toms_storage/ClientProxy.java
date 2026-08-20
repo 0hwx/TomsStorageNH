@@ -39,7 +39,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     private void registerJsonModels() {
-        ModelRegistry.registerModid(TomsStorageMod.MODID);
+        ModelRegistry.registerModid(TomsStorage.MODID);
 
         BlockProperty<ForgeDirection> terminalFacing = TerminalStateProperties.facing();
         BlockProperty<String> terminalPos = TerminalStateProperties.pos();

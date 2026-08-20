@@ -11,12 +11,12 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
 @Mod(
-    modid = TomsStorageMod.MODID,
+    modid = TomsStorage.MODID,
     version = Tags.VERSION,
-    name = TomsStorageMod.NAME,
+    name = TomsStorage.NAME,
     acceptedMinecraftVersions = "[1.7.10]",
     dependencies = "required-after:NotEnoughItems;required-after:unimixins")
-public class TomsStorageMod {
+public class TomsStorage {
 
     public static final String MODID = "tomsstorage";
     public static final String NAME = "Tom's Simple Storage";
@@ -27,7 +27,7 @@ public class TomsStorageMod {
     public static CommonProxy proxy;
 
     @Mod.Instance(MODID)
-    public static TomsStorageMod instance;
+    public static TomsStorage instance;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {

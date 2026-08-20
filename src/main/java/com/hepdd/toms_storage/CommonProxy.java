@@ -17,11 +17,11 @@ public class CommonProxy {
         ModNetwork.init();
         ModRegistry.preInit();
 
-        TomsStorageMod.LOG.info("Starting " + TomsStorageMod.NAME + " " + Tags.VERSION);
+        TomsStorage.LOG.info("Starting " + TomsStorage.NAME + " " + Tags.VERSION);
     }
 
     public void init(FMLInitializationEvent event) {
-        NetworkRegistry.INSTANCE.registerGuiHandler(TomsStorageMod.instance, new GuiHandler());
+        NetworkRegistry.INSTANCE.registerGuiHandler(TomsStorage.instance, new GuiHandler());
         ModRegistry.init();
     }
 

@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import com.hepdd.toms_storage.StoredItemStack;
-import com.hepdd.toms_storage.TomsStorageMod;
+import com.hepdd.toms_storage.TomsStorage;
 
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
@@ -73,7 +73,7 @@ public class PacketTerminalData implements IMessage {
 
         @Override
         public IMessage onMessage(PacketTerminalData message, MessageContext ctx) {
-            TomsStorageMod.proxy.handleTerminalData(message);
+            TomsStorage.proxy.handleTerminalData(message);
             return null;
         }
     }

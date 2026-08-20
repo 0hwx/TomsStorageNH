@@ -1,5 +1,7 @@
-package com.hepdd.toms_storage;
+package com.hepdd.toms_storage.proxy;
 
+import com.hepdd.toms_storage.TomsStorage;
+import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.Container;
@@ -40,16 +42,16 @@ public class ClientProxy extends CommonProxy {
 
         BlockProperty<ForgeDirection> terminalFacing = TerminalStateProperties.facing();
         BlockProperty<String> terminalPos = TerminalStateProperties.pos();
-        for (Block terminal : new Block[] { ModRegistry.storageTerminal, ModRegistry.craftingTerminal }) {
+        for (Block terminal : new Block[] { ModBlocks.STORAGE_TERMINAL.get(), ModBlocks.CRAFTING_TERMINAL.get() }) {
             BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalFacing, ForgeDirection.NORTH);
             BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalPos, MountPos.CENTER.variant());
         }
         BlockPropertyRegistry.registerBlockItemProperty(
-            ModRegistry.inventoryHopper,
+                ModBlocks.INVENTORY_HOPPER.get(),
             DirectionBlockProperty.facing(),
             ForgeDirection.DOWN);
         for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
-            BlockPropertyRegistry.registerProperty(ModRegistry.inventoryCable, CableStateProperties.connection(side));
+            BlockPropertyRegistry.registerProperty(ModBlocks.INVENTORY_CABLE.get(), CableStateProperties.connection(side));
         }
     }
 

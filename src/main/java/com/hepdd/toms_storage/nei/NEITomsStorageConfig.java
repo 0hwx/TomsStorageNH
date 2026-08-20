@@ -1,8 +1,8 @@
 package com.hepdd.toms_storage.nei;
 
+import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.Tags;
 import com.hepdd.toms_storage.client.GuiCraftingTerminal;
 
@@ -16,7 +16,7 @@ public class NEITomsStorageConfig implements IConfigureNEI {
     public void loadConfig() {
         API.registerGuiOverlay(GuiCraftingTerminal.class, "crafting", 26, 111);
         API.registerGuiOverlayHandler(GuiCraftingTerminal.class, new TerminalOverlayHandler(), "crafting");
-        API.addRecipeCatalyst(new ItemStack(ModRegistry.craftingTerminal), "crafting");
+        API.addRecipeCatalyst(new ItemStack(ModBlocks.CRAFTING_TERMINAL.get()), "crafting");
         TerminalVirtualStackHandler virtualStackHandler = new TerminalVirtualStackHandler();
         GuiContainerManager.addObjectHandler(virtualStackHandler);
         GuiContainerManager.addTooltipHandler(virtualStackHandler);

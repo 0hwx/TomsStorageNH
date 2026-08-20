@@ -1,7 +1,12 @@
 package com.hepdd.toms_storage.block;
 
+import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
@@ -13,12 +18,13 @@ import com.gtnewhorizon.gtnhlib.client.model.BakedModelQuadContext;
 import com.gtnewhorizon.gtnhlib.client.model.baked.BakedModel;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ResourceLoc;
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.inventory.IStorageNetworkEndpoint;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+
+import java.util.List;
 
 public class BlockInventoryCable extends Block implements IBlockModelProvider {
 
@@ -31,10 +37,8 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
     public BlockInventoryCable() {
         super(Material.wood);
         setBlockName("tomsstorage.inventory_cable");
-        setBlockTextureName("tomsstorage:inventory_cable");
         setHardness(1.5F);
         setResistance(3.0F);
-        setCreativeTab(ModRegistry.CREATIVE_TAB);
         setBlockBounds(MIN, MIN, MIN, MAX, MAX, MAX);
     }
 
@@ -43,7 +47,7 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
         int nextY = y + direction.offsetY;
         int nextZ = z + direction.offsetZ;
         Block block = world.getBlock(nextX, nextY, nextZ);
-        if (block == ModRegistry.inventoryCable || block == ModRegistry.inventoryConnector) return true;
+        if (block == ModBlocks.INVENTORY_CABLE.get() || block == ModBlocks.INVENTORY_CONNECTOR.get()) return true;
         TileEntity tile = world.getTileEntity(nextX, nextY, nextZ);
         if (tile instanceof IStorageNetworkEndpoint) {
             return ((IStorageNetworkEndpoint) tile).canConnectNetworkFrom(direction.getOpposite());
@@ -95,5 +99,19 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
     @Override
     public void setBlockBoundsForItemRender() {
         setBlockBounds(MIN, MIN, MIN, MAX, MAX, MAX);
+    }
+
+    public static class ItemBlockInventoryCable extends ItemBlock {
+
+        public ItemBlockInventoryCable(Block block) {
+            super(block);
+        }
+
+        @Override
+        @SideOnly(Side.CLIENT)
+        public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
+            String key = "tooltip.tomsstorage.inventory_cable";
+            TooltipHelper.addLines(tooltip, key);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.hepdd.toms_storage.item;
 
 import java.util.List;
 
+import com.hepdd.toms_storage.registry.ModItems;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -13,7 +14,6 @@ import net.minecraft.world.World;
 
 import com.hepdd.toms_storage.Config;
 import com.hepdd.toms_storage.GuiHandler;
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.client.TooltipHelper;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
@@ -32,7 +32,6 @@ public class ItemWirelessTerminal extends Item {
     public ItemWirelessTerminal() {
         setUnlocalizedName("tomsstorage.wireless_terminal");
         setTextureName("tomsstorage:wireless_terminal");
-        setCreativeTab(ModRegistry.CREATIVE_TAB);
         setMaxStackSize(1);
     }
 
@@ -103,7 +102,7 @@ public class ItemWirelessTerminal extends Item {
     }
 
     private static boolean isWireless(ItemStack stack) {
-        return stack != null && stack.getItem() == ModRegistry.wirelessTerminal;
+        return stack != null && stack.getItem() == ModItems.WIRELESS_TERMINAL.get();
     }
 
     private static boolean isTerminal(TileEntity tile) {

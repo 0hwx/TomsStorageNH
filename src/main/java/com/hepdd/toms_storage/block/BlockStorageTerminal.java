@@ -1,9 +1,14 @@
 package com.hepdd.toms_storage.block;
 
+import com.hepdd.toms_storage.client.TooltipHelper;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
@@ -12,10 +17,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.hepdd.toms_storage.GuiHandler;
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
+
+import java.util.List;
 
 public class BlockStorageTerminal extends BlockContainer {
 
@@ -48,14 +54,11 @@ public class BlockStorageTerminal extends BlockContainer {
         }
 
         public static MountPos fromMeta(int metadata) {
-            switch ((metadata >> 2) & 3) {
-                case 1:
-                    return UP;
-                case 2:
-                    return DOWN;
-                default:
-                    return CENTER;
-            }
+            return switch ((metadata >> 2) & 3) {
+                case 1 -> UP;
+                case 2 -> DOWN;
+                default -> CENTER;
+            };
         }
 
         public static MountPos fromVariant(String variant) {
@@ -72,10 +75,8 @@ public class BlockStorageTerminal extends BlockContainer {
     public BlockStorageTerminal() {
         super(Material.wood);
         setBlockName("tomsstorage.storage_terminal");
-        setBlockTextureName("tomsstorage:inventory_connector");
         setHardness(3.0F);
         setResistance(5.0F);
-        setCreativeTab(ModRegistry.CREATIVE_TAB);
     }
 
     @Override
@@ -182,6 +183,20 @@ public class BlockStorageTerminal extends BlockContainer {
             default:
                 setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.375F);
                 break;
+        }
+    }
+
+    public static class ItemBlockStorageTerminal extends ItemBlock {
+
+        public ItemBlockStorageTerminal(Block block) {
+            super(block);
+        }
+
+        @Override
+        @SideOnly(Side.CLIENT)
+        public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
+            String key = "tooltip.tomsstorage.storage_terminal";
+            TooltipHelper.addLines(tooltip, key);
         }
     }
 }

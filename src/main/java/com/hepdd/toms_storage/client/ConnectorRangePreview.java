@@ -3,6 +3,7 @@ package com.hepdd.toms_storage.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.renderer.Tessellator;
@@ -12,7 +13,6 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import org.lwjgl.opengl.GL11;
 
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -82,7 +82,7 @@ public final class ConnectorRangePreview {
         EntityClientPlayerMP player = minecraft.thePlayer;
         if (gridVertices == null || world == null || player == null) return;
         if (world.provider.dimensionId != dimension || !world.blockExists(x, y, z)
-            || world.getBlock(x, y, z) != ModRegistry.inventoryConnector) {
+            || world.getBlock(x, y, z) != ModBlocks.INVENTORY_CONNECTOR.get()) {
             clear();
             return;
         }

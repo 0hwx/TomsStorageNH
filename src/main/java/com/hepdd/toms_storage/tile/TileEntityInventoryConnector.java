@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
@@ -14,7 +15,6 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.hepdd.toms_storage.Config;
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.inventory.CombinedStorageInventory;
 import com.hepdd.toms_storage.inventory.IStorageInventory;
 import com.hepdd.toms_storage.inventory.IStorageNetworkAccess;
@@ -60,8 +60,8 @@ public class TileEntityInventoryConnector extends TileEntity implements IStorage
         while (!toCheck.isEmpty()) {
             ChunkCoordinates current = toCheck.removeFirst();
             Block currentBlock = worldObj.getBlock(current.posX, current.posY, current.posZ);
-            boolean currentIsTrim = currentBlock == ModRegistry.trim;
-            boolean currentIsCableNode = currentBlock == ModRegistry.inventoryCable
+            boolean currentIsTrim = currentBlock == ModBlocks.TRIM.get();
+            boolean currentIsCableNode = currentBlock == ModBlocks.INVENTORY_CABLE.get()
                 || current.posX == xCoord && current.posY == yCoord && current.posZ == zCoord;
 
             for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
@@ -76,7 +76,7 @@ public class TileEntityInventoryConnector extends TileEntity implements IStorage
                 Block nextBlock = worldObj.getBlock(next.posX, next.posY, next.posZ);
                 TileEntity tile = worldObj.getTileEntity(next.posX, next.posY, next.posZ);
 
-                if (currentBlock == ModRegistry.inventoryCable && tile instanceof TileEntityInventoryConnector
+                if (currentBlock == ModBlocks.INVENTORY_CABLE.get() && tile instanceof TileEntityInventoryConnector
                     && tile != this) {
                     cableNetworkConflict = true;
                     continue;
@@ -92,7 +92,7 @@ public class TileEntityInventoryConnector extends TileEntity implements IStorage
 
                 if (checked.contains(key)) continue;
 
-                if (currentIsCableNode && nextBlock == ModRegistry.inventoryCable) {
+                if (currentIsCableNode && nextBlock == ModBlocks.INVENTORY_CABLE.get()) {
                     if (cableNodes >= Config.maxInventoryCableNodes) {
                         cableScanLimitReached = true;
                         continue;
@@ -103,8 +103,8 @@ public class TileEntityInventoryConnector extends TileEntity implements IStorage
                     continue;
                 }
 
-                if (nextBlock == ModRegistry.inventoryCable || tile instanceof IStorageNetworkEndpoint) continue;
-                if (currentBlock == ModRegistry.inventoryCable
+                if (nextBlock == ModBlocks.INVENTORY_CABLE.get() || tile instanceof IStorageNetworkEndpoint) continue;
+                if (currentBlock == ModBlocks.INVENTORY_CABLE.get()
                     || getDistanceSq(next) > Config.getInventoryConnectorRangeSquared()) continue;
                 checked.add(key);
 
@@ -118,7 +118,7 @@ public class TileEntityInventoryConnector extends TileEntity implements IStorage
                     continue;
                 }
 
-                if (nextBlock == ModRegistry.trim) {
+                if (nextBlock == ModBlocks.TRIM.get()) {
                     toCheck.addLast(next);
                 }
             }

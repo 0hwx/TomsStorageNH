@@ -1,8 +1,13 @@
 package com.hepdd.toms_storage.block;
 
+import com.hepdd.toms_storage.client.TooltipHelper;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
@@ -10,18 +15,17 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.hepdd.toms_storage.ModRegistry;
 import com.hepdd.toms_storage.tile.TileEntityInventoryHopper;
+
+import java.util.List;
 
 public class BlockInventoryHopper extends BlockContainer {
 
     public BlockInventoryHopper() {
         super(Material.wood);
         setBlockName("tomsstorage.inventory_hopper");
-        setBlockTextureName("tomsstorage:inventory_hopper_basic");
         setHardness(2.5F);
         setResistance(4.0F);
-        setCreativeTab(ModRegistry.CREATIVE_TAB);
     }
 
     @Override
@@ -73,8 +77,7 @@ public class BlockInventoryHopper extends BlockContainer {
         float hitY, float hitZ) {
         if (world.isRemote) return true;
         TileEntity tile = world.getTileEntity(x, y, z);
-        if (!(tile instanceof TileEntityInventoryHopper)) return true;
-        TileEntityInventoryHopper hopper = (TileEntityInventoryHopper) tile;
+        if (!(tile instanceof TileEntityInventoryHopper hopper)) return true;
         ItemStack held = player.getHeldItem();
         if (held != null) {
             hopper.setFilter(held);
@@ -102,5 +105,19 @@ public class BlockInventoryHopper extends BlockContainer {
     public void onNeighborBlockChange(World world, int x, int y, int z, net.minecraft.block.Block neighbor) {
         TileEntity tile = world.getTileEntity(x, y, z);
         if (tile instanceof TileEntityInventoryHopper) ((TileEntityInventoryHopper) tile).markNetworkDirty();
+    }
+
+    public static class ItemInventoryHopper extends ItemBlock {
+
+        public ItemInventoryHopper(Block block) {
+            super(block);
+        }
+
+        @Override
+        @SideOnly(Side.CLIENT)
+        public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltip, boolean advanced) {
+            String key = "tooltip.tomsstorage.inventory_hopper";
+            TooltipHelper.addLines(tooltip, key);
+        }
     }
 }

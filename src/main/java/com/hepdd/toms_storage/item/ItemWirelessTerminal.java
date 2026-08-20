@@ -2,7 +2,6 @@ package com.hepdd.toms_storage.item;
 
 import java.util.List;
 
-import com.hepdd.toms_storage.TomsStorage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -15,6 +14,7 @@ import net.minecraft.world.World;
 import com.hepdd.toms_storage.Config;
 import com.hepdd.toms_storage.GuiHandler;
 import com.hepdd.toms_storage.ModRegistry;
+import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.client.TooltipHelper;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;

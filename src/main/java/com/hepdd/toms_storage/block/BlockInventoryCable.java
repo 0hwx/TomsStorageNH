@@ -8,13 +8,25 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.api.IBlockModelProvider;
+import com.gtnewhorizon.gtnhlib.client.model.BakedModelQuadContext;
+import com.gtnewhorizon.gtnhlib.client.model.baked.BakedModel;
+import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
+import com.gtnewhorizon.gtnhlib.client.model.loading.ResourceLoc;
 import com.hepdd.toms_storage.ModRegistry;
+import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.inventory.IStorageNetworkEndpoint;
 
-public class BlockInventoryCable extends Block {
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
+public class BlockInventoryCable extends Block implements IBlockModelProvider {
 
     private static final float MIN = 6.0F / 16.0F;
     private static final float MAX = 10.0F / 16.0F;
+
+    @SideOnly(Side.CLIENT)
+    private static BakedModel itemModel;
 
     public BlockInventoryCable() {
         super(Material.wood);
@@ -50,8 +62,17 @@ public class BlockInventoryCable extends Block {
     }
 
     @Override
-    public int getRenderType() {
-        return ModRegistry.cableRenderId;
+    @SideOnly(Side.CLIENT)
+    public BakedModel getModel(BakedModelQuadContext context) {
+        if (context instanceof BakedModelQuadContext.Item) {
+            if (itemModel == null) {
+                itemModel = ModelRegistry
+                    .getJSONModel(new ResourceLoc.ModelLoc(TomsStorage.MODID, "block/cable/cable_item"))
+                    .bake();
+            }
+            return itemModel;
+        }
+        return ModelRegistry.getBakedModel(context.getBlockState());
     }
 
     @Override

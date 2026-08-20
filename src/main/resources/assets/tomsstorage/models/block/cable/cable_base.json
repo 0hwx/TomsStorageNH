@@ -1,0 +1,6 @@
+{
+    "textures": {
+        "particle": "tomsstorage:block/inventory_cable"
+    },
+    "parent": "block/block"
+}

@@ -3,7 +3,6 @@ package com.hepdd.toms_storage.mixin;
 import com.gtnewhorizon.gtnhmixins.builders.IMixins;
 import com.gtnewhorizon.gtnhmixins.builders.MixinBuilder;
 
-
 public enum Mixins implements IMixins {
     // spotless:off
 

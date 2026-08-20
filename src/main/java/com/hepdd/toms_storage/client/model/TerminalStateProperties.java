@@ -40,12 +40,14 @@ public final class TerminalStateProperties {
 
         @Override
         public int getMeta(String value, int existing) {
-            return (existing & 3) | MountPos.fromVariant(value).toMeta();
+            return (existing & 3) | MountPos.fromVariant(value)
+                .toMeta();
         }
 
         @Override
         public String getValue(int meta) {
-            return MountPos.fromMeta(meta).variant();
+            return MountPos.fromMeta(meta)
+                .variant();
         }
 
         @Override

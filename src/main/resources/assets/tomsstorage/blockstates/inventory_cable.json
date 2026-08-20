@@ -1,0 +1,29 @@
+{
+    "multipart": [
+        { "apply": { "model": "tomsstorage:block/cable/cable_base" } },
+        { "when": { "north": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "uvlock": true } },
+        { "when": { "east": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "y": 270, "uvlock": true } },
+        { "when": { "south": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "y": 180, "uvlock": true } },
+        { "when": { "west": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "y": 90, "uvlock": true } },
+        { "when": { "up": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "x": 90, "uvlock": true } },
+        { "when": { "down": "false" },
+          "apply": { "model": "tomsstorage:block/cable/cable_closed", "x": -90, "uvlock": true } },
+        { "when": { "north": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "uvlock": true } },
+        { "when": { "east": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "y": 270, "uvlock": true } },
+        { "when": { "south": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "y": 180, "uvlock": true } },
+        { "when": { "west": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "y": 90, "uvlock": true } },
+        { "when": { "up": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "x": 90, "uvlock": true } },
+        { "when": { "down": "true" },
+          "apply": { "model": "tomsstorage:block/cable/cable_open", "x": -90, "uvlock": true } }
+    ]
+  }

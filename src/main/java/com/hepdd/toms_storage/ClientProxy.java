@@ -12,7 +12,7 @@ import com.gtnewhorizon.gtnhlib.blockstate.registry.BlockPropertyRegistry;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
 import com.hepdd.toms_storage.block.BlockStorageTerminal.MountPos;
 import com.hepdd.toms_storage.client.ConnectorRangePreview;
-import com.hepdd.toms_storage.client.RenderInventoryCableBlock;
+import com.hepdd.toms_storage.client.model.CableStateProperties;
 import com.hepdd.toms_storage.client.model.TerminalStateProperties;
 import com.hepdd.toms_storage.gui.ContainerStorageTerminal;
 import com.hepdd.toms_storage.nei.NEIDebug;
@@ -20,7 +20,6 @@ import com.hepdd.toms_storage.network.PacketAutoCraftResult;
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
 import com.hepdd.toms_storage.network.PacketTerminalData;
 
-import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
@@ -28,8 +27,6 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent event) {
-        ModRegistry.cableRenderId = RenderingRegistry.getNextAvailableRenderId();
-        RenderingRegistry.registerBlockHandler(new RenderInventoryCableBlock());
         MinecraftForge.EVENT_BUS.register(ConnectorRangePreview.INSTANCE);
         FMLCommonHandler.instance()
             .bus()
@@ -51,6 +48,9 @@ public class ClientProxy extends CommonProxy {
             ModRegistry.inventoryHopper,
             DirectionBlockProperty.facing(),
             ForgeDirection.DOWN);
+        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            BlockPropertyRegistry.registerProperty(ModRegistry.inventoryCable, CableStateProperties.connection(side));
+        }
     }
 
     @Override

@@ -33,7 +33,6 @@ public final class ModRegistry {
     public static Block inventoryCable;
     public static Block inventoryHopper;
     public static Item wirelessTerminal;
-    public static int cableRenderId;
 
     public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(TomsStorage.MODID) {
 
@@ -62,8 +61,7 @@ public final class ModRegistry {
         GameRegistry.registerBlock(inventoryHopper, ItemBlockWithTooltip.class, "inventory_hopper");
         GameRegistry.registerItem(wirelessTerminal, "wireless_terminal");
         GameRegistry.registerTileEntity(TileEntityCraftingTerminal.class, TomsStorage.MODID + ":crafting_terminal");
-        GameRegistry
-            .registerTileEntity(TileEntityInventoryConnector.class, TomsStorage.MODID + ":inventory_connector");
+        GameRegistry.registerTileEntity(TileEntityInventoryConnector.class, TomsStorage.MODID + ":inventory_connector");
         GameRegistry.registerTileEntity(TileEntityStorageTerminal.class, TomsStorage.MODID + ":storage_terminal");
         GameRegistry.registerTileEntity(TileEntityInventoryHopper.class, TomsStorage.MODID + ":inventory_hopper");
     }

@@ -1,6 +1,5 @@
 package com.hepdd.toms_storage.block;
 
-import com.hepdd.toms_storage.TomsStorage;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
@@ -14,6 +13,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.hepdd.toms_storage.GuiHandler;
 import com.hepdd.toms_storage.ModRegistry;
+import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
 
@@ -156,8 +156,6 @@ public class BlockStorageTerminal extends BlockContainer {
         MountPos pos = MountPos.fromMeta(metadata);
         return pos == MountPos.CENTER ? getFacing(metadata).getOpposite() : pos.attachDirection();
     }
-
-
 
     private static int horizontalIndex(EntityLivingBase entity) {
         return (int) Math.floor(entity.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;

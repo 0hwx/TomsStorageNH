@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 
+import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -40,6 +41,9 @@ public final class NetworkItemIndex {
     private int revision;
     private List<CachedItemStack> aggregate = Collections.emptyList();
     private int aggregateRevision = -1;
+
+    // Set by verifyAgainst so the caller can name the member that owns the offending slot.
+    private int lastBadSlot = -1;
 
     /** Resets everything and declares every slot empty. Call on graph rebuild, then re-read all slots. */
     public void resize(int totalSlots) {
@@ -156,6 +160,117 @@ public final class NetworkItemIndex {
         aggregate = list;
         aggregateRevision = revision;
         return list;
+    }
+
+    /**
+     * Re-reads every slot and reports where the index disagrees with reality. Debug only, O(total slots).
+     *
+     * <p>
+     * Worth having because updates are relative (`count += new - old`): the sweep repairs a wrong shadow,
+     * but a drifted running total survives until the next {@link #resize}, and nothing else would notice.
+     *
+     * @return an empty string when consistent, otherwise a short summary
+     */
+    /** The first slot {@link #verifyAgainst} found wrong, or -1. */
+    public int lastBadSlot() {
+        return lastBadSlot;
+    }
+
+    public String verifyAgainst(IItemHandler live) {
+        lastBadSlot = -1;
+        int slots = shadowKey.length;
+        if (live.getSlots() != slots) return "slots " + live.getSlots() + "!=" + slots;
+
+        Object2ObjectOpenHashMap<ItemKey, long[]> expected = new Object2ObjectOpenHashMap<>();
+        int expectedEmpty = 0;
+        int shadowBad = 0;
+        int bitmapBad = 0;
+        int listBad = 0;
+        int firstBadSlot = -1;
+        String firstBadDetail = "";
+
+        for (int slot = 0; slot < slots; slot++) {
+            ItemStack stack = live.getStackInSlot(slot);
+            if (stack != null && stack.stackSize <= 0) stack = null;
+            ItemKey key = shadowKey[slot];
+
+            boolean slotOk = stack == null ? key == null
+                : key != null && key.matches(stack) && shadowCount[slot] == stack.stackSize;
+            if (!slotOk) {
+                shadowBad++;
+                if (firstBadSlot < 0) {
+                    firstBadSlot = slot;
+                    lastBadSlot = slot;
+                    firstBadDetail = describe(key, shadowCount[slot]) + "->" + describe(stack);
+                }
+            }
+
+            // The bitmap must agree with the shadow regardless of what the live inventory says.
+            boolean bitSet = (emptyBits[slot >>> 6] & 1L << slot) != 0L;
+            if (bitSet != (key == null)) bitmapBad++;
+
+            if (key != null) {
+                Entry entry = entries.get(key);
+                if (entry == null || slotListPos[slot] >= entry.slots.size()
+                    || entry.slots.getInt(slotListPos[slot]) != slot) listBad++;
+            }
+
+            if (stack == null) {
+                expectedEmpty++;
+            } else {
+                long[] total = expected.get(probe.set(stack));
+                if (total == null) {
+                    total = new long[1];
+                    expected.put(ItemKey.copyOf(stack), total);
+                }
+                total[0] += stack.stackSize;
+            }
+        }
+
+        int countBad = 0;
+        for (Map.Entry<ItemKey, long[]> mapping : expected.entrySet()) {
+            Entry entry = entries.get(mapping.getKey());
+            if (entry == null || entry.count != mapping.getValue()[0]) countBad++;
+        }
+        // Entries the live read never produced. Counted explicitly rather than by size difference, which
+        // would cancel out when the index is both missing one item and holding a stale one.
+        int orphans = 0;
+        for (ItemKey key : entries.keySet()) {
+            if (!expected.containsKey(key)) orphans++;
+        }
+
+        if (shadowBad == 0 && bitmapBad == 0
+            && listBad == 0
+            && countBad == 0
+            && orphans == 0
+            && expectedEmpty == emptyCount) return "";
+        return "shadow=" + shadowBad
+            + " bitmap="
+            + bitmapBad
+            + " lists="
+            + listBad
+            + " counts="
+            + countBad
+            + " orphans="
+            + orphans
+            + " empty="
+            + emptyCount
+            + "/"
+            + expectedEmpty
+            + " firstSlot="
+            + firstBadSlot
+            + (firstBadDetail.isEmpty() ? "" : " " + firstBadDetail);
+    }
+
+    private static String describe(ItemKey key, int count) {
+        if (key == null) return "empty";
+        ItemStack stack = key.toStack();
+        return stack.getUnlocalizedName() + "@" + stack.getItemDamage() + "x" + count;
+    }
+
+    private static String describe(ItemStack stack) {
+        if (stack == null) return "empty";
+        return stack.getUnlocalizedName() + "@" + stack.getItemDamage() + "x" + stack.stackSize;
     }
 
     private void setEmpty(int slot, boolean isEmpty) {

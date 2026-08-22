@@ -6,7 +6,7 @@ import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 
 @Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "general")
-public class ModConfig {
+public class TomsConfig {
 
     @Config.Comment("Inventory Connector scan range.")
     @Config.DefaultInt(16)
@@ -46,7 +46,7 @@ public class ModConfig {
     public static boolean debugNetworkStats;
 
     public static void register() {
-        ConfigurationManager.registerConfig(ModConfig.class);
+        ConfigurationManager.registerConfig(TomsConfig.class);
         ConfigurationManager.registerConfig(Client.class);
     }
 
@@ -54,7 +54,7 @@ public class ModConfig {
         return inventoryConnectorRange * inventoryConnectorRange;
     }
 
-    /** Client-local terminal state. Written back at runtime when a terminal closes. */
+    /** Client-local terminal state. The search preset is written back when a terminal closes. */
     @Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "client")
     public static final class Client {
 
@@ -62,10 +62,8 @@ public class ModConfig {
         @Config.DefaultEnum("AUTO_KEEP")
         public static TerminalSearchMode terminalSearchMode;
 
-        @Config.Comment("Last locally retained terminal search.")
-        @Config.DefaultString("")
         @Config.Ignore
-        public static String terminalLastSearch;
+        public static String terminalLastSearch = "";
 
         public static void saveTerminalSearchSettings(TerminalSearchMode mode, String search) {
             terminalSearchMode = mode == null ? TerminalSearchMode.STANDARD : mode;

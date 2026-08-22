@@ -1,7 +1,6 @@
 package com.hepdd.toms_storage.client;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -14,7 +13,6 @@ import com.hepdd.toms_storage.client.model.CableStateProperties;
 import com.hepdd.toms_storage.client.model.TerminalStateProperties;
 import com.hepdd.toms_storage.common.CommonProxy;
 import com.hepdd.toms_storage.common.block.BlockStorageTerminal.MountPos;
-import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -49,11 +47,5 @@ public class ClientProxy extends CommonProxy {
             BlockPropertyRegistry
                 .registerProperty(ModBlocks.INVENTORY_CABLE.get(), CableStateProperties.connection(side));
         }
-    }
-
-    @Override
-    public void handleConnectorRangePreview(PacketConnectorRangePreview message) {
-        Minecraft.getMinecraft()
-            .func_152344_a(() -> ConnectorRangePreview.INSTANCE.showOrToggle(message));
     }
 }

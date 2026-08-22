@@ -14,7 +14,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.gtnewhorizon.gtnhlib.capability.Capabilities;
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.SidedInvWrapper;
 import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkEndpoint;
 import com.hepdd.toms_storage.common.tile.TileEntityInventoryConnector;
@@ -146,7 +146,7 @@ public final class NetworkGraph {
         int cableNodes = 0;
         boolean cableScanLimitReached = false;
         boolean cableNetworkConflict = false;
-        int rangeSq = ModConfig.getInventoryConnectorRangeSquared();
+        int rangeSq = TomsConfig.getInventoryConnectorRangeSquared();
         Block cableBlock = ModBlocks.INVENTORY_CABLE.get();
         Block trimBlock = ModBlocks.TRIM.get();
 
@@ -189,7 +189,7 @@ public final class NetworkGraph {
                 if (checked.contains(next)) continue;
 
                 if (currentIsCableNode && nextBlock == cableBlock) {
-                    if (cableNodes >= ModConfig.maxInventoryCableNodes) {
+                    if (cableNodes >= TomsConfig.maxInventoryCableNodes) {
                         cableScanLimitReached = true;
                         continue;
                     }
@@ -213,9 +213,8 @@ public final class NetworkGraph {
                 // NOTE: the TileEntityInventoryConnector skip above MUST stay above this branch -- asHandler
                 // would otherwise return another connector's whole network and nest it inside this one.
                 IItemHandler handler = StorageUtils.asHandler(tile, access);
-                if (handler != null && (!ModConfig.onlyTrimsConnect || currentIsTrim)) {
-                    Object backing = handler instanceof SidedInvWrapper wrapper ? wrapper.getInventory()
-                        : handler;
+                if (handler != null && (!TomsConfig.onlyTrimsConnect || currentIsTrim)) {
+                    Object backing = handler instanceof SidedInvWrapper wrapper ? wrapper.getInventory() : handler;
                     // A duplicate still counts as a network position, so changes there still invalidate.
                     memberPositions.add(next);
                     int memberSlots = handler.getSlots();

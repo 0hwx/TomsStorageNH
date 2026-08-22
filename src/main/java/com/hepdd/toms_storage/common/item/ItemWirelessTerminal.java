@@ -11,7 +11,7 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.client.utils.TooltipHelper;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.TerminalGuiFactory;
@@ -40,7 +40,7 @@ public class ItemWirelessTerminal extends Item {
         TooltipHelper.addLines(tooltip, "tooltip.tomsstorage.wireless_terminal");
         tooltip.add(
             net.minecraft.client.resources.I18n
-                .format("tooltip.tomsstorage.wireless_terminal.range", ModConfig.wirelessReach));
+                .format("tooltip.tomsstorage.wireless_terminal.range", TomsConfig.wirelessReach));
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(TAG_DIMENSION)) {
             tooltip.add(
@@ -134,7 +134,7 @@ public class ItemWirelessTerminal extends Item {
         int x = tag.getInteger(TAG_X);
         int y = tag.getInteger(TAG_Y);
         int z = tag.getInteger(TAG_Z);
-        if (player.getDistanceSq(x + 0.5D, y + 0.5D, z + 0.5D) > ModConfig.wirelessReach * ModConfig.wirelessReach) {
+        if (player.getDistanceSq(x + 0.5D, y + 0.5D, z + 0.5D) > TomsConfig.wirelessReach * TomsConfig.wirelessReach) {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.too_far"));
             return;
         }
@@ -148,7 +148,7 @@ public class ItemWirelessTerminal extends Item {
     }
 
     private void openTarget(World world, EntityPlayer player, int x, int y, int z, TileEntity tile) {
-        if (player.getDistanceSq(x + 0.5D, y + 0.5D, z + 0.5D) > ModConfig.wirelessReach * ModConfig.wirelessReach) {
+        if (player.getDistanceSq(x + 0.5D, y + 0.5D, z + 0.5D) > TomsConfig.wirelessReach * TomsConfig.wirelessReach) {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.too_far"));
             return;
         }

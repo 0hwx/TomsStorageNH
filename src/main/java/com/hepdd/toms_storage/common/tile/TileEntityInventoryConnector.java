@@ -10,7 +10,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
-import com.hepdd.toms_storage.ModConfig;
+import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.common.inventory.NetworkItemHandler;
 import com.hepdd.toms_storage.common.inventory.network.NetworkGraph;
@@ -120,7 +121,7 @@ public class TileEntityInventoryConnector extends TileEntity
         // Coalesce dirty bursts: a redstone clock beside a hopper fires onNeighborBlockChange every tick,
         // and rebuilding the whole graph that often would undo the point of this rework.
         if (topologyDirty && sinceLast >= MIN_REBUILD_INTERVAL
-            || sinceLast >= ModConfig.networkTopologyRescanInterval) {
+            || sinceLast >= TomsConfig.networkTopologyRescanInterval) {
             rebuildGraph();
         }
     }
@@ -234,6 +235,24 @@ public class TileEntityInventoryConnector extends TileEntity
         lastRebuildNanos = System.nanoTime() - start;
     }
 
+    /** Names the member owning a global slot, so a drift report says which inventory is involved. */
+    private String describeMember(int globalSlot) {
+        if (globalSlot < 0) return "?";
+        for (NetworkGraph.MemberRef member : graph.members()) {
+            if (globalSlot >= member.firstSlot() && globalSlot < member.firstSlot() + member.slots) {
+                return member.tile.getClass()
+                    .getSimpleName() + "("
+                    + CoordinatePacker.unpackX(member.pos)
+                    + ","
+                    + CoordinatePacker.unpackY(member.pos)
+                    + ","
+                    + CoordinatePacker.unpackZ(member.pos)
+                    + ")";
+            }
+        }
+        return "?";
+    }
+
     /** Total slots across the network, for the connector's chat readout. */
     public int getTotalSlots() {
         return graph.totalSlots();
@@ -242,15 +261,18 @@ public class TileEntityInventoryConnector extends TileEntity
     /** Debug readout, so the rework's effect can be measured rather than asserted. */
     public String getNetworkStats() {
         flushPendingWrites();
+        String drift = index.verifyAgainst(inventory);
+        if (!drift.isEmpty()) drift += " at=" + describeMember(index.lastBadSlot());
         return String.format(
             Locale.ROOT,
-            "members=%d slots=%d free=%d items=%d rebuild=%.2fms sweep=%d",
+            "members=%d slots=%d free=%d items=%d rebuild=%.2fms sweep=%d check=%s",
             graph.members().length,
             graph.totalSlots(),
             index.emptySlotCount(),
             index.distinctItems(),
             lastRebuildNanos / 1_000_000.0D,
-            sweepCursor);
+            sweepCursor,
+            drift.isEmpty() ? "ok" : drift);
     }
 
     public boolean isCableScanLimitReached() {

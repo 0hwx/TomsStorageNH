@@ -29,7 +29,7 @@ import com.cleanroommc.modularui.value.sync.SyncHandlers;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.container.StorageTerminalContainer;
@@ -54,7 +54,7 @@ public class StorageTerminalPanel extends ModularPanel {
     /** Panel name doubles as the GUI texture name; buttons live on the same sheet as the background. */
     protected final String textureName;
 
-    private TileEntityStorageTerminal.TerminalSearchMode searchMode = ModConfig.Client.terminalSearchMode;
+    private TileEntityStorageTerminal.TerminalSearchMode searchMode = TomsConfig.Client.terminalSearchMode;
     private StringSyncValue searchValue;
     private TerminalGridSyncHandler grid;
 
@@ -134,14 +134,14 @@ public class StorageTerminalPanel extends ModularPanel {
 
     private void saveSearchSettings() {
         String retained = searchMode.keepText() && searchValue != null ? searchValue.getValue() : "";
-        ModConfig.Client.saveTerminalSearchSettings(searchMode, retained);
+        TomsConfig.Client.saveTerminalSearchSettings(searchMode, retained);
     }
 
     @Override
     public void onOpen(ModularScreen screen) {
         super.onOpen(screen);
-        if (searchMode.keepText() && searchValue != null && !ModConfig.Client.terminalLastSearch.isEmpty()) {
-            searchValue.setValue(ModConfig.Client.terminalLastSearch, true, true);
+        if (searchMode.keepText() && searchValue != null && !TomsConfig.Client.terminalLastSearch.isEmpty()) {
+            searchValue.setValue(TomsConfig.Client.terminalLastSearch, true, true);
         }
     }
 

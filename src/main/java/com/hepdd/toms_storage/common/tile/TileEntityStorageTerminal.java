@@ -18,7 +18,7 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.gtnewhorizon.gtnhlib.capability.Capabilities;
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.block.BlockStorageTerminal;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
@@ -80,7 +80,7 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
     public boolean canInteractWith(EntityPlayer player) {
         if (worldObj.getTileEntity(xCoord, yCoord, zCoord) != this) return false;
         double maxDistance = ItemWirelessTerminal.isPlayerHolding(player)
-            ? ModConfig.wirelessReach * ModConfig.wirelessReach
+            ? TomsConfig.wirelessReach * TomsConfig.wirelessReach
             : 64.0D;
         return player.getDistanceSq(xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D) <= maxDistance;
     }

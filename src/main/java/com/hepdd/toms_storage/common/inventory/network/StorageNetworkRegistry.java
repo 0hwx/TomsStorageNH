@@ -8,7 +8,7 @@ import java.util.Map;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkHost;
 
 /**
@@ -53,7 +53,7 @@ public final class StorageNetworkRegistry {
     public void tick() {
         int count = hosts.size();
         if (count == 0) return;
-        int perNetwork = Math.max(1, ModConfig.networkSweepSlotsPerTick / count);
+        int perNetwork = Math.max(1, TomsConfig.networkSweepSlotsPerTick / count);
         for (int i = 0; i < count; i++) {
             hosts.get(Math.floorMod(sweepCursor + i, count))
                 .tickNetwork(perNetwork);

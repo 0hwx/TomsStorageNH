@@ -2,13 +2,12 @@ package com.hepdd.toms_storage.common;
 
 import net.minecraftforge.common.MinecraftForge;
 
-import com.hepdd.toms_storage.ModConfig;
 import com.hepdd.toms_storage.Tags;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.inventory.network.StorageNetworkEvents;
 import com.hepdd.toms_storage.compat.mui.TerminalGuiFactory;
-import com.hepdd.toms_storage.network.ModNetwork;
-import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
+import com.hepdd.toms_storage.network.TomsNetwork;
 import com.hepdd.toms_storage.registry.ModBlocks;
 import com.hepdd.toms_storage.registry.ModItems;
 import com.hepdd.toms_storage.registry.ModRecipes;
@@ -23,8 +22,8 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent event) {
-        ModConfig.register();
-        ModNetwork.init();
+        TomsConfig.register();
+        TomsNetwork.init();
         TerminalGuiFactory.register();
         ModBlocks.init();
         ModItems.init();
@@ -43,8 +42,6 @@ public class CommonProxy {
     }
 
     public void postInit(FMLPostInitializationEvent event) {}
-
-    public void handleConnectorRangePreview(PacketConnectorRangePreview message) {}
 
     public void serverStarting(FMLServerStartingEvent event) {}
 }

@@ -15,12 +15,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 
-import com.hepdd.toms_storage.ModConfig;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.client.utils.TooltipHelper;
 import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
 import com.hepdd.toms_storage.common.tile.TileEntityInventoryConnector;
-import com.hepdd.toms_storage.network.ModNetwork;
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
+import com.hepdd.toms_storage.network.TomsNetwork;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.relauncher.Side;
@@ -67,13 +67,13 @@ public class BlockInventoryConnector extends BlockContainer {
         }
         if (!world.isRemote) {
             if (player.isSneaking() && player.getHeldItem() == null && player instanceof EntityPlayerMP) {
-                ModNetwork.channel.sendTo(
+                TomsNetwork.channel.sendTo(
                     new PacketConnectorRangePreview(
                         world.provider.dimensionId,
                         x,
                         y,
                         z,
-                        ModConfig.inventoryConnectorRange,
+                        TomsConfig.inventoryConnectorRange,
                         200),
                     (EntityPlayerMP) player);
                 return true;
@@ -86,7 +86,7 @@ public class BlockInventoryConnector extends BlockContainer {
                         connector.getIndex()
                             .emptySlotCount(),
                         connector.getTotalSlots()));
-                if (ModConfig.debugNetworkStats) {
+                if (TomsConfig.debugNetworkStats) {
                     player.addChatMessage(
                         new ChatComponentTranslation(
                             "message.tomsstorage.inventory_connector.stats",
@@ -96,7 +96,7 @@ public class BlockInventoryConnector extends BlockContainer {
                     player.addChatMessage(
                         new ChatComponentTranslation(
                             "message.tomsstorage.inventory_connector.cable_limit",
-                            ModConfig.maxInventoryCableNodes));
+                            TomsConfig.maxInventoryCableNodes));
                 }
                 if (connector.hasCableNetworkConflict()) {
                     player.addChatMessage(
@@ -119,7 +119,7 @@ public class BlockInventoryConnector extends BlockContainer {
             String key = "tooltip.tomsstorage.inventory_connector";
             TooltipHelper.addLines(tooltip, key);
             tooltip
-                .add(I18n.format("tooltip.tomsstorage.inventory_connector.range", ModConfig.inventoryConnectorRange));
+                .add(I18n.format("tooltip.tomsstorage.inventory_connector.range", TomsConfig.inventoryConnectorRange));
             tooltip.add(I18n.format("tooltip.tomsstorage.inventory_connector.range_cable"));
         }
     }

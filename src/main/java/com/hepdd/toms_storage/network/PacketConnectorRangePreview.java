@@ -1,13 +1,15 @@
 package com.hepdd.toms_storage.network;
 
-import com.hepdd.toms_storage.TomsStorage;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.network.PacketBuffer;
 
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import io.netty.buffer.ByteBuf;
+import com.gtnewhorizon.gtnhlib.network.base.IPacket;
+import com.hepdd.toms_storage.client.ConnectorRangePreview;
 
-public class PacketConnectorRangePreview implements IMessage {
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
+public class PacketConnectorRangePreview implements IPacket {
 
     private int dimension;
     private int x;
@@ -28,7 +30,17 @@ public class PacketConnectorRangePreview implements IMessage {
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
+    public void encode(PacketBuffer buf) {
+        buf.writeInt(dimension);
+        buf.writeInt(x);
+        buf.writeInt(y);
+        buf.writeInt(z);
+        buf.writeInt(radius);
+        buf.writeInt(durationTicks);
+    }
+
+    @Override
+    public void decode(PacketBuffer buf) {
         dimension = buf.readInt();
         x = buf.readInt();
         y = buf.readInt();
@@ -38,13 +50,10 @@ public class PacketConnectorRangePreview implements IMessage {
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
-        buf.writeInt(dimension);
-        buf.writeInt(x);
-        buf.writeInt(y);
-        buf.writeInt(z);
-        buf.writeInt(radius);
-        buf.writeInt(durationTicks);
+    @SideOnly(Side.CLIENT)
+    public IPacket executeClient(NetHandlerPlayClient handler) {
+        ConnectorRangePreview.INSTANCE.showOrToggle(this);
+        return null;
     }
 
     public int getDimension() {
@@ -69,14 +78,5 @@ public class PacketConnectorRangePreview implements IMessage {
 
     public int getDurationTicks() {
         return durationTicks;
-    }
-
-    public static class Handler implements IMessageHandler<PacketConnectorRangePreview, IMessage> {
-
-        @Override
-        public IMessage onMessage(PacketConnectorRangePreview message, MessageContext ctx) {
-            TomsStorage.proxy.handleConnectorRangePreview(message);
-            return null;
-        }
     }
 }

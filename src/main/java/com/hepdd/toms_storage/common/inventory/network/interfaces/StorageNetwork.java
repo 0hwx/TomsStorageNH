@@ -23,6 +23,18 @@ public interface StorageNetwork {
     /** Increments only when the contents actually change, so readers can skip needless re-sorts. */
     int getContentsRevision();
 
+    /** Total slots across the network. */
+    int getTotalSlots();
+
+    /** Slots currently holding an item. */
+    int getUsedSlots();
+
+    /** Every item in the network counted individually, not per stack. */
+    long getStoredItems();
+
+    /** Sum of every slot's own limit, so an oversized slot counts for what it can really hold. */
+    long getItemCapacity();
+
     void markContentsDirty();
 
     /** False once the network is gone, so a bound endpoint can drop a dead reference. */

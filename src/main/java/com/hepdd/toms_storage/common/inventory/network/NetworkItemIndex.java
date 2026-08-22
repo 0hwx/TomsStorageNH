@@ -32,6 +32,8 @@ public final class NetworkItemIndex {
     // ascending order, so a new item fills the lowest empty slot the way a plain slot walk used to.
     private long[] emptyBits = new long[0];
     private int emptyCount;
+    // Running sum of every slot's stack size, so the terminal's fill bar costs nothing to read.
+    private long totalCount;
 
     private ItemKey[] shadowKey = new ItemKey[0];
     private int[] shadowCount = new int[0];
@@ -59,6 +61,7 @@ public final class NetworkItemIndex {
         int tail = totalSlots & 63;
         if (tail != 0) emptyBits[emptyBits.length - 1] = (1L << tail) - 1L;
         emptyCount = totalSlots;
+        totalCount = 0L;
         revision++;
     }
 
@@ -72,6 +75,11 @@ public final class NetworkItemIndex {
 
     public int emptySlotCount() {
         return emptyCount;
+    }
+
+    /** Every item in the network counted individually, not per stack. */
+    public long totalCount() {
+        return totalCount;
     }
 
     /** The lowest empty slot at or after {@code from}, or -1 when there is none. */
@@ -115,6 +123,7 @@ public final class NetworkItemIndex {
             if (oldCount == stack.stackSize) return;
             Entry entry = entries.get(oldKey);
             if (entry != null) entry.count += stack.stackSize - oldCount;
+            totalCount += stack.stackSize - oldCount;
             shadowCount[slot] = stack.stackSize;
             revision++;
             return;
@@ -123,6 +132,8 @@ public final class NetworkItemIndex {
         if (oldKey == null) {
             setEmpty(slot, false);
         } else {
+            // Driven off the shadow arrays, not the entry, so a missing entry cannot drift the total.
+            totalCount -= oldCount;
             Entry entry = entries.get(oldKey);
             if (entry != null) {
                 entry.count -= oldCount;
@@ -142,6 +153,7 @@ public final class NetworkItemIndex {
                 entries.put(entry.key, entry);
             }
             entry.count += stack.stackSize;
+            totalCount += stack.stackSize;
             addTo(entry.slots, slot);
             shadowKey[slot] = entry.key;
             shadowCount[slot] = stack.stackSize;
@@ -183,6 +195,7 @@ public final class NetworkItemIndex {
 
         Object2ObjectOpenHashMap<ItemKey, long[]> expected = new Object2ObjectOpenHashMap<>();
         int expectedEmpty = 0;
+        long expectedTotal = 0L;
         int shadowBad = 0;
         int bitmapBad = 0;
         int listBad = 0;
@@ -224,6 +237,7 @@ public final class NetworkItemIndex {
                     expected.put(ItemKey.copyOf(stack), total);
                 }
                 total[0] += stack.stackSize;
+                expectedTotal += stack.stackSize;
             }
         }
 
@@ -243,7 +257,8 @@ public final class NetworkItemIndex {
             && listBad == 0
             && countBad == 0
             && orphans == 0
-            && expectedEmpty == emptyCount) return "";
+            && expectedEmpty == emptyCount
+            && expectedTotal == totalCount) return "";
         return "shadow=" + shadowBad
             + " bitmap="
             + bitmapBad
@@ -257,6 +272,10 @@ public final class NetworkItemIndex {
             + emptyCount
             + "/"
             + expectedEmpty
+            + " items="
+            + totalCount
+            + "/"
+            + expectedTotal
             + " firstSlot="
             + firstBadSlot
             + (firstBadDetail.isEmpty() ? "" : " " + firstBadDetail);

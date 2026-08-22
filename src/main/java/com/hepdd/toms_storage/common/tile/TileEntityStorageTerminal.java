@@ -55,6 +55,54 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return inventory == null ? Collections.emptyList() : StorageUtils.aggregate(inventory);
     }
 
+    /** Slot occupancy of whatever the terminal is attached to, for the header status bar. */
+    public int getTotalSlots() {
+        StorageNetwork access = getAttachedAccess();
+        if (access != null) return access.getTotalSlots();
+        IItemHandler inventory = getAttachedInventory();
+        return inventory == null ? 0 : inventory.getSlots();
+    }
+
+    public int getUsedSlots() {
+        StorageNetwork access = getAttachedAccess();
+        // A network keeps a running empty-slot count; a plain inventory is one chest, so scanning is cheap.
+        if (access != null) return access.getUsedSlots();
+        IItemHandler inventory = getAttachedInventory();
+        if (inventory == null) return 0;
+        int used = 0;
+        for (int slot = 0; slot < inventory.getSlots(); slot++) {
+            if (inventory.getStackInSlot(slot) != null) used++;
+        }
+        return used;
+    }
+
+    /** Items held, counted individually. Paired with {@link #getItemCapacity()} for the fill bar. */
+    public long getStoredItems() {
+        StorageNetwork access = getAttachedAccess();
+        if (access != null) return access.getStoredItems();
+        IItemHandler inventory = getAttachedInventory();
+        if (inventory == null) return 0L;
+        long stored = 0L;
+        for (int slot = 0; slot < inventory.getSlots(); slot++) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (stack != null) stored += stack.stackSize;
+        }
+        return stored;
+    }
+
+    /** Sum of every slot's own limit, so a drawer or barrel counts for what it can really hold. */
+    public long getItemCapacity() {
+        StorageNetwork access = getAttachedAccess();
+        if (access != null) return access.getItemCapacity();
+        IItemHandler inventory = getAttachedInventory();
+        if (inventory == null) return 0L;
+        long capacity = 0L;
+        for (int slot = 0; slot < inventory.getSlots(); slot++) {
+            capacity += inventory.getSlotLimit(slot);
+        }
+        return capacity;
+    }
+
     /** Bumps when the network contents change; the sync handler re-sorts only when this changes. */
     public int getRevision() {
         StorageNetwork access = getAttachedAccess();

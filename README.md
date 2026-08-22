@@ -29,7 +29,8 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 - Inventory Connectors combine touching inventories into one storage network.
 - Inventory Trim extends the connected path between inventories.
 - Storage Terminals provide centralized insertion, extraction, sorting and searching.
-- Crafting Terminals add a crafting grid with NEI recipe transfer and auto-crafting integration.
+- Crafting Terminals add a crafting grid with NEI recipe transfer and auto-crafting integration. A toggle beside the crafting output chooses whether results go to your inventory or into the storage network.
+- Every terminal shows two bars in its header: slots used out of the network total, and items stored out of the network's capacity. Capacity is summed from each inventory's own slot limit, so a drawer or barrel counts for what it can really hold. Hover either bar for the exact numbers.
 - Wireless Terminals can be bound to a terminal and used within the configured range and dimension.
 - Placing or breaking this mod's own blocks updates the network immediately. A container placed or broken deeper in a chain of containers is picked up by a periodic rescan instead, so it can take a few seconds to appear (see `networkTopologyRescanInterval`). Items moved in or out by other mods are noticed by a continuous background sweep (see `networkSweepSlotsPerTick`).
 

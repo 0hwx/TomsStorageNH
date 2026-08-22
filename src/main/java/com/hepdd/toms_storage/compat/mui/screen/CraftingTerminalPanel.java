@@ -1,5 +1,6 @@
 package com.hepdd.toms_storage.compat.mui.screen;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.screen.ModularContainer;
 import com.cleanroommc.modularui.screen.UISettings;
@@ -10,6 +11,7 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotTerminalCraftingMatrix;
 import com.hepdd.toms_storage.compat.mui.slot.TerminalCraftingSlot;
@@ -52,10 +54,15 @@ public class CraftingTerminalPanel extends StorageTerminalPanel {
             craftingTile::setCraftToStorage);
         craftMode.allowC2S(true);
         sync.syncValue("craft_to_storage", 3, craftMode);
+        // Same two-state layout as the sort direction button, one row further down the sheet.
         child(new ButtonWidget<>().onMousePressed(mouseButton -> {
             craftMode.setBoolValue(!craftMode.getBoolValue(), true, true);
             return true;
         })
+            .background(new DynamicDrawable(() -> buttonTexture(194 + (craftMode.getBoolValue() ? 16 : 0 ) , 46, 16, 16)))
+            .tooltipDynamic(
+                t -> t.addLine(IKey.lang("tooltip.tomsstorage.craft_to_storage." + (craftMode.getBoolValue() ? 1 : 0))))
+            .tooltipAutoUpdate(true)
             .pos(150, 129)
             .size(16, 16));
 

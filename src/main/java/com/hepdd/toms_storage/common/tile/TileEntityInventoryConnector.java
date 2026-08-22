@@ -42,6 +42,7 @@ public class TileEntityInventoryConnector extends TileEntity
     private List<NetworkGraph.EndpointRef> attachedEndpoints = Collections.emptyList();
     private int sweepCursor;
     private long lastRebuildNanos;
+    private long totalCapacity;
 
     @Override
     public IItemHandler getStorageInventory() {
@@ -232,7 +233,23 @@ public class TileEntityInventoryConnector extends TileEntity
             }
         }
         attachedEndpoints = current;
+        recalculateCapacity();
         lastRebuildNanos = System.nanoTime() - start;
+    }
+
+    /**
+     * Sums every member's own slot limit, so a drawer or barrel contributes what it can really hold rather
+     * than a flat 64. Refreshed on rebuild rather than on read: the periodic rescan bounds how long a
+     * capacity upgrade takes to show up, and this walks every slot.
+     */
+    private void recalculateCapacity() {
+        long capacity = 0L;
+        for (NetworkGraph.MemberRef member : graph.members()) {
+            for (int slot = 0; slot < member.slots; slot++) {
+                capacity += member.handler.getSlotLimit(slot);
+            }
+        }
+        totalCapacity = capacity;
     }
 
     /** Names the member owning a global slot, so a drift report says which inventory is involved. */
@@ -253,9 +270,27 @@ public class TileEntityInventoryConnector extends TileEntity
         return "?";
     }
 
-    /** Total slots across the network, for the connector's chat readout. */
+    /** Total slots across the network, for the connector's chat readout and the terminal's status bar. */
+    @Override
     public int getTotalSlots() {
         return graph.totalSlots();
+    }
+
+    @Override
+    public int getUsedSlots() {
+        flushPendingWrites();
+        return graph.totalSlots() - index.emptySlotCount();
+    }
+
+    @Override
+    public long getStoredItems() {
+        flushPendingWrites();
+        return index.totalCount();
+    }
+
+    @Override
+    public long getItemCapacity() {
+        return totalCapacity;
     }
 
     /** Debug readout, so the rework's effect can be measured rather than asserted. */

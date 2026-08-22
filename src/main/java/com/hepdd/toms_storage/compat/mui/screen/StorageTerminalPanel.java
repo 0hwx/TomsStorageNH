@@ -32,6 +32,9 @@ import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.SortDirection;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.SortingTypes;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.TerminalSearchMode;
 import com.hepdd.toms_storage.compat.mui.container.StorageTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotPlayer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotTerminal;
@@ -43,24 +46,21 @@ public class StorageTerminalPanel extends ModularPanel {
     protected static final int GRID_Y = 17;
     protected static final int SLOT = 18;
 
-    private static final UITexture SCROLL_HANDLE = UITexture.builder()
-        .location(new ResourceLocation("textures/gui/container/creative_inventory/tabs.png"))
-        .imageSize(256, 256)
-        .subAreaXYWH(232, 0, 12, 15)
-        .build();
+    // Header strip left of the search field; both bars are centred against the field's 10px height.
+    private static final int STATUS_X = 8;
+    private static final int STATUS_Y = 6;
+
+    // Sync ids 0-3 are taken by the grid, the two sort buttons and the crafting terminal's craft mode.
+    private static final int SYNC_STATUS = 4;
 
     protected final TileEntityStorageTerminal tile;
 
     /** Panel name doubles as the GUI texture name; buttons live on the same sheet as the background. */
     protected final String textureName;
 
-    private TileEntityStorageTerminal.TerminalSearchMode searchMode = TomsConfig.Client.terminalSearchMode;
+    private TerminalSearchMode searchMode = TomsConfig.Client.terminalSearchMode;
     private StringSyncValue searchValue;
     private TerminalGridSyncHandler grid;
-
-    protected TerminalGridSyncHandler grid() {
-        return grid;
-    }
 
     public StorageTerminalPanel(TileEntityStorageTerminal tile, PanelSyncManager sync, UISettings settings) {
         this("storage_terminal", 194, 202, 119, tile, sync, settings);
@@ -84,6 +84,7 @@ public class StorageTerminalPanel extends ModularPanel {
         addSearchField(grid);
         addSortButtons(sync);
         addScrollBar(grid);
+        new TerminalStatusInfo(tile, sync, SYNC_STATUS).addTo(this, STATUS_X, STATUS_Y);
         child(playerInventory().pos(GRID_X, playerInvY));
     }
 
@@ -98,6 +99,10 @@ public class StorageTerminalPanel extends ModularPanel {
                     .detectAndSendChanges();
             }
         });
+    }
+
+    protected TerminalGridSyncHandler grid() {
+        return grid;
     }
 
     protected ModularContainer createContainer() {
@@ -152,28 +157,20 @@ public class StorageTerminalPanel extends ModularPanel {
         TerminalSearchField.restoreNeiSearch();
     }
 
-    protected UITexture buttonTexture(int x, int y, int w, int h) {
-        return UITexture.builder()
-            .location(new ResourceLocation("tomsstorage", "textures/gui/" + textureName + ".png"))
-            .imageSize(256, 256)
-            .subAreaXYWH(x, y, w, h)
-            .build();
-    }
-
     private void addSortButtons(PanelSyncManager sync) {
-        EnumSyncValue<TileEntityStorageTerminal.SortingTypes, ?> sortType = SyncHandlers
-            .enumValue(TileEntityStorageTerminal.SortingTypes.class, tile::getSortType, tile::setSortType);
+        EnumSyncValue<SortingTypes, ?> sortType = SyncHandlers
+            .enumValue(SortingTypes.class, tile::getSortType, tile::setSortType);
         sortType.allowC2S(true);
         sync.syncValue("terminal_sort_type", 1, sortType);
 
-        EnumSyncValue<TileEntityStorageTerminal.SortDirection, ?> sortDirection = SyncHandlers
-            .enumValue(TileEntityStorageTerminal.SortDirection.class, tile::getSortDirection, tile::setSortDirection);
+        EnumSyncValue<SortDirection, ?> sortDirection = SyncHandlers
+            .enumValue(SortDirection.class, tile::getSortDirection, tile::setSortDirection);
         sortDirection.allowC2S(true);
         sync.syncValue("terminal_sort_direction", 2, sortDirection);
 
         // Button faces come off the panel's own texture sheet: 194 + state*16 across, one row per button.
         child(new ButtonWidget<>().onMousePressed(mouseButton -> {
-            TileEntityStorageTerminal.SortingTypes[] values = TileEntityStorageTerminal.SortingTypes.VALUES;
+            SortingTypes[] values = SortingTypes.VALUES;
             sortType.setValue(
                 values[(sortType.getValue()
                     .ordinal() + 1) % values.length],
@@ -209,7 +206,7 @@ public class StorageTerminalPanel extends ModularPanel {
             .background(
                 new DynamicDrawable(
                     () -> buttonTexture(
-                        194 + (sortDirection.getValue() == TileEntityStorageTerminal.SortDirection.DESCENDING ? 16 : 0),
+                        194 + (sortDirection.getValue() == SortDirection.DESCENDING ? 16 : 0),
                         46,
                         16,
                         16)))
@@ -217,8 +214,7 @@ public class StorageTerminalPanel extends ModularPanel {
                 t -> t.addLine(
                     IKey.lang(
                         "tooltip.tomsstorage.direction."
-                            + (sortDirection.getValue() == TileEntityStorageTerminal.SortDirection.DESCENDING ? 1
-                                : 0))))
+                            + (sortDirection.getValue() == SortDirection.DESCENDING ? 1 : 0))))
             .tooltipAutoUpdate(true)
             .pos(-18, 23)
             .size(16, 16));
@@ -285,6 +281,20 @@ public class StorageTerminalPanel extends ModularPanel {
                     .pos(i % 9 * SLOT, i / 9 * SLOT));
         }
         return group.coverChildren();
+    }
+
+    private static final UITexture SCROLL_HANDLE = UITexture.builder()
+        .location(new ResourceLocation("textures/gui/container/creative_inventory/tabs.png"))
+        .imageSize(256, 256)
+        .subAreaXYWH(232, 0, 12, 15)
+        .build();
+
+    protected UITexture buttonTexture(int x, int y, int w, int h) {
+        return UITexture.builder()
+            .location(new ResourceLocation("tomsstorage", "textures/gui/" + textureName + ".png"))
+            .imageSize(256, 256)
+            .subAreaXYWH(x, y, w, h)
+            .build();
     }
 
     protected static UITexture backgroundTexture(String name, int width, int height) {

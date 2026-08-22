@@ -94,10 +94,6 @@ public final class CraftingInventorySnapshot {
         intermediates.add(new Entry(stack, stack.stackSize, -1));
     }
 
-    public boolean hasPlayerInventory() {
-        return usePlayerInventory;
-    }
-
     private List<Entry> entriesFor(Extraction.Source source) {
         switch (source) {
             case INTERMEDIATE:

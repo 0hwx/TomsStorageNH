@@ -1,8 +1,11 @@
 package com.hepdd.toms_storage.registry;
 
+import java.util.function.BooleanSupplier;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.item.ItemWirelessTerminal;
 
@@ -13,7 +16,7 @@ public enum ModItems {
     // spotless:off
 
     // make sure to leave a trailing comma
-    WIRELESS_TERMINAL(true, new ItemWirelessTerminal(), "wireless_terminal"),
+    WIRELESS_TERMINAL(() -> TomsConfig.Content.wirelessTerminal, new ItemWirelessTerminal(), "wireless_terminal"),
 
     ; // leave trailing semicolon
     // spotless:on
@@ -29,18 +32,18 @@ public enum ModItems {
         }
     }
 
-    private final boolean isEnabled;
+    private final BooleanSupplier isEnabled;
     private final Item theItem;
     private final String name;
 
-    ModItems(boolean enabled, Item item, String name) {
+    ModItems(BooleanSupplier enabled, Item item, String name) {
         this.isEnabled = enabled;
         theItem = item;
         this.name = name;
     }
 
     public boolean isEnabled() {
-        return isEnabled;
+        return isEnabled.getAsBoolean();
     }
 
     public Item get() {

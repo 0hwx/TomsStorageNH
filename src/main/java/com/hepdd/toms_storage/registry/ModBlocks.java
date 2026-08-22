@@ -1,10 +1,13 @@
 package com.hepdd.toms_storage.registry;
 
+import java.util.function.BooleanSupplier;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.block.BlockCraftingTerminal;
 import com.hepdd.toms_storage.common.block.BlockInventoryCable;
@@ -19,12 +22,12 @@ import cpw.mods.fml.common.registry.GameRegistry;
 public enum ModBlocks {
 
     // spotless:off
-    INVENTORY_CONNECTOR(true , new BlockInventoryConnector(), BlockInventoryConnector.ItemBlockInventoryConnector.class, "inventory_connector"),
-    CRAFTING_TERMINAL(true, new BlockCraftingTerminal(), BlockCraftingTerminal.ItemBlockCraftingTerminal.class, "crafting_terminal"),
-    STORAGE_TERMINAL(true, new BlockStorageTerminal(), BlockStorageTerminal.ItemBlockStorageTerminal.class, "storage_terminal"),
-    TRIM(true, new BlockTrim(), BlockTrim.ItemBlockTrim.class, "trim"),
-    INVENTORY_CABLE(true, new BlockInventoryCable(), BlockInventoryCable.ItemBlockInventoryCable.class, "inventory_cable" ),
-    INVENTORY_HOPPER(true, new BlockInventoryHopper(), BlockInventoryHopper.ItemInventoryHopper.class, "inventory_hopper"),
+    INVENTORY_CONNECTOR(() -> TomsConfig.Content.inventoryConnector, new BlockInventoryConnector(), BlockInventoryConnector.ItemBlockInventoryConnector.class, "inventory_connector"),
+    CRAFTING_TERMINAL(() -> TomsConfig.Content.craftingTerminal, new BlockCraftingTerminal(), BlockCraftingTerminal.ItemBlockCraftingTerminal.class, "crafting_terminal"),
+    STORAGE_TERMINAL(() -> TomsConfig.Content.storageTerminal, new BlockStorageTerminal(), BlockStorageTerminal.ItemBlockStorageTerminal.class, "storage_terminal"),
+    TRIM(() -> TomsConfig.Content.trim, new BlockTrim(), BlockTrim.ItemBlockTrim.class, "trim"),
+    INVENTORY_CABLE(() -> TomsConfig.Content.inventoryCable, new BlockInventoryCable(), BlockInventoryCable.ItemBlockInventoryCable.class, "inventory_cable" ),
+    INVENTORY_HOPPER(() -> TomsConfig.Content.inventoryHopper, new BlockInventoryHopper(), BlockInventoryHopper.ItemInventoryHopper.class, "inventory_hopper"),
 
     ; // leave trailing semicolon
     // spotless:on
@@ -50,7 +53,9 @@ public enum ModBlocks {
         }
     }
 
-    private final boolean isEnabled;
+    // A supplier, not a value: enum constants are built the moment this class loads, which need not be
+    // after the config has been read. Asking at registration time keeps the two orders independent.
+    private final BooleanSupplier isEnabled;
     private final Block theBlock;
     /**
      * null == default ItemBlock
@@ -63,12 +68,12 @@ public enum ModBlocks {
     private boolean hasItemBlock;
     private final String name;
 
-    ModBlocks(Boolean enabled, Block block, String name) {
+    ModBlocks(BooleanSupplier enabled, Block block, String name) {
         this(enabled, block, null, name);
         hasItemBlock = true;
     }
 
-    ModBlocks(Boolean enabled, Block block, Class<? extends ItemBlock> iblock, String name) {
+    ModBlocks(BooleanSupplier enabled, Block block, Class<? extends ItemBlock> iblock, String name) {
         isEnabled = enabled;
         theBlock = block;
         itemBlock = iblock;
@@ -96,7 +101,7 @@ public enum ModBlocks {
     }
 
     public boolean isEnabled() {
-        return isEnabled;
+        return isEnabled.getAsBoolean();
     }
 
     public ItemStack newItemStack() {

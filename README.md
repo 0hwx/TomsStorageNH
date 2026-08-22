@@ -73,6 +73,14 @@ Storage network tuning, in `config/tomsstorage.cfg`:
 - `debugNetworkStats` (default false) — adds a statistics line (members, slots, distinct items, last rebuild time) when right-clicking an Inventory Connector.
 - `shiftCraftLimit` (default `ONE_STACK`) — how much one shift-click on the crafting result produces. `ONE_STACK` stops at a full stack of the result, the same boundary AE2 uses, so a recipe yielding 3 at a time stops at 63 rather than overshooting. `ALL_AVAILABLE` keeps crafting until the ingredients run out. Applies to both craft directions; a plain click is always a single craft and is never limited.
 
+### Content Toggles
+
+The `content` category of the same file has one switch per block and item, all on by default: `inventoryConnector`, `storageTerminal`, `craftingTerminal`, `trim`, `inventoryCable`, `inventoryHopper`, `wirelessTerminal`.
+
+Turning one off skips its block or item, its tile entity, and its own recipe. Recipes that merely *use* it stay craftable: the slot either falls back to a substitute — the Crafting Terminal takes a chest in place of a disabled Storage Terminal — or is stripped out, as the Basic Inventory Hopper's cable slot is. A recipe is only dropped when its result is disabled, or when stripping would leave it with no ingredients at all. A pack can trim the mod down this way without a recipe tweaker.
+
+These are read while registering, so a change needs a restart, and blocks already placed in a world will vanish when their entry is switched off.
+
 ## Quick Start
 
 1. Place an Inventory Connector against the inventories you want to combine. Use Inventory Trim to extend the local connected path.

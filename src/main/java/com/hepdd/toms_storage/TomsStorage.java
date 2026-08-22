@@ -1,6 +1,7 @@
 package com.hepdd.toms_storage;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 
 import org.apache.logging.log4j.LogManager;
@@ -8,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.hepdd.toms_storage.common.CommonProxy;
 import com.hepdd.toms_storage.registry.ModBlocks;
+import com.hepdd.toms_storage.registry.ModItems;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -61,7 +63,14 @@ public class TomsStorage {
 
         @Override
         public Item getTabIconItem() {
-            return ModBlocks.INVENTORY_CONNECTOR.getItem();
+            if (ModBlocks.INVENTORY_CONNECTOR.isEnabled()) return ModBlocks.INVENTORY_CONNECTOR.getItem();
+            for (ModBlocks block : ModBlocks.VALUES) {
+                if (block.isEnabled() && block.getItem() != null) return block.getItem();
+            }
+            for (ModItems item : ModItems.VALUES) {
+                if (item.isEnabled()) return item.get();
+            }
+            return Items.chest_minecart;
         }
     };
 }

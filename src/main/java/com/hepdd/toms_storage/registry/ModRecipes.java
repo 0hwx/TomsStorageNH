@@ -1,10 +1,11 @@
 package com.hepdd.toms_storage.registry;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -14,62 +15,100 @@ public final class ModRecipes {
         // spotless:off
         shaped(
             ModBlocks.INVENTORY_CONNECTOR.newItemStack(),
-            "LLL",
-            "LcL",
-            "LLL",
-            'L', "logWood",
-            'c', Blocks.chest);
+            "PCP",
+            "cDc",
+            "PEP",
+            'P', "plankWood",
+            'c', Blocks.chest,
+            'D', "gemDiamond",
+            'C', Items.comparator,
+            'E', Items.ender_pearl);
 
         shaped(
             ModBlocks.STORAGE_TERMINAL.newItemStack(),
-            "SSS",
-            "ScS",
-            "SSS",
-            'S', "slabWood",
-            'c', Blocks.chest);
+            "PCP",
+            "cGg",
+            "PCP",
+            'P', "plankWood",
+            'c', Blocks.chest,
+            'C', Items.comparator,
+            'G', Blocks.glowstone,
+            'g', "blockGlass");
 
-        shapeless(
+        shaped(
             ModBlocks.CRAFTING_TERMINAL.newItemStack(),
-            ModBlocks.STORAGE_TERMINAL.get(),
-            Blocks.crafting_table);
+            "cdc",
+            "dtd",
+            "cdc",
+            'd', "gemDiamond",
+            'c', Blocks.crafting_table,
+            't', orElse(ModBlocks.STORAGE_TERMINAL.get(), Blocks.chest));
 
         shaped(
-            ModBlocks.TRIM.newItemStack(4),
-            " P ",
-            "PcP",
-            " P ",
-            'P', Blocks.planks,
-            'c', Blocks.chest);
+            ModBlocks.TRIM.newItemStack(2),
+            "PSP",
+            "SCS",
+            "PSP",
+            'P', "plankWood",
+            'C', Blocks.chest,
+            'S', "stickWood");
 
         shaped(
-            ModBlocks.INVENTORY_CABLE.newItemStack(8),
-            "PPP",
-            "RRR",
-            "PPP",
-            'P', "slabWood",
-            'R', Items.redstone);
+            ModBlocks.INVENTORY_CABLE.newItemStack(6),
+            "SPS",
+            "TcT",
+            "SPS",
+            'P', "plankWood",
+            'S', "stickWood",
+            'c', Blocks.chest,
+            'T', Blocks.trapdoor);
 
-        shapeless(
+        shaped(
             ModBlocks.INVENTORY_HOPPER.newItemStack(),
-            Blocks.hopper,
-            ModBlocks.INVENTORY_CABLE.get());
+            "PcP",
+            " H ",
+            'P', "plankWood",
+            'c', orElse(ModBlocks.INVENTORY_CABLE.get(), "stickWood"),
+            'H', Blocks.hopper);
 
         shaped(
             ModItems.WIRELESS_TERMINAL.newItemStack(),
-            " E ",
-            " T ",
-            " D ",
+            "PCP",
+            "aGg",
+            "PEP",
+            'P', "plankWood",
+            'a', Items.ender_eye,
+            'C', Items.comparator,
             'E', Items.ender_pearl,
-            'T', ModBlocks.STORAGE_TERMINAL.get(),
-            'D', Items.diamond);
+            'G', Blocks.glowstone,
+            'g', "blockGlass");
     }
     // spotless:on
 
     private static void shaped(ItemStack result, Object... recipe) {
+        if (!enabled(result)) return;
         GameRegistry.addRecipe(new ShapedOreRecipe(result, recipe));
     }
 
-    private static void shapeless(ItemStack result, Object... ingredients) {
-        GameRegistry.addRecipe(new ShapelessOreRecipe(result, ingredients));
+    private static Object orElse(Object... options) {
+        for (Object option : options) {
+            if (enabled(option)) return option;
+        }
+        return options.length == 0 ? null : options[options.length - 1];
+    }
+
+    private static boolean enabled(Object part) {
+        if (part == null) return false;
+        if (part instanceof ItemStack stack) return enabled(stack.getItem());
+        if (part instanceof Block block) {
+            for (ModBlocks entry : ModBlocks.VALUES) {
+                if (entry.get() == block) return entry.isEnabled();
+            }
+        } else if (part instanceof Item item) {
+            for (ModItems entry : ModItems.VALUES) {
+                if (entry.get() == item) return entry.isEnabled();
+            }
+        }
+        return true;
     }
 }

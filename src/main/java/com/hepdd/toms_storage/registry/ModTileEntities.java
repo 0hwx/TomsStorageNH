@@ -14,10 +14,10 @@ public enum ModTileEntities {
 
     // spotless:off
     // make sure to leave a trailing comma
-    STORAGE_TERMINAL(TileEntityStorageTerminal.class                                                , "storage_terminal"),
-    CRAFTING_TERMINAL(TileEntityCraftingTerminal.class                                              , "crafting_terminal"),
-    INVENTORY_CONNECTOR(TileEntityInventoryConnector.class                                          , "inventory_connector"),
-    INVENTORY_HOPPER(TileEntityInventoryHopper.class                                                , "inventory_hopper"),
+    STORAGE_TERMINAL(ModBlocks.STORAGE_TERMINAL    , TileEntityStorageTerminal.class    , "storage_terminal"),
+    CRAFTING_TERMINAL(ModBlocks.CRAFTING_TERMINAL  , TileEntityCraftingTerminal.class   , "crafting_terminal"),
+    INVENTORY_CONNECTOR(ModBlocks.INVENTORY_CONNECTOR, TileEntityInventoryConnector.class, "inventory_connector"),
+    INVENTORY_HOPPER(ModBlocks.INVENTORY_HOPPER    , TileEntityInventoryHopper.class    , "inventory_hopper"),
     ;
     // spotless:on
 
@@ -31,21 +31,17 @@ public enum ModTileEntities {
         }
     }
 
-    private final boolean isEnabled;
+    private final ModBlocks block;
     private final Class<? extends TileEntity> clazz;
     private final String name;
 
-    ModTileEntities(Class<? extends TileEntity> clazz, String name) {
-        this(true, clazz, name);
-    }
-
-    ModTileEntities(Boolean enabled, Class<? extends TileEntity> clazz, String name) {
-        this.isEnabled = enabled;
+    ModTileEntities(ModBlocks block, Class<? extends TileEntity> clazz, String name) {
+        this.block = block;
         this.clazz = clazz;
         this.name = TomsStorage.MODID + ":" + name;
     }
 
     public boolean isEnabled() {
-        return isEnabled;
+        return block.isEnabled();
     }
 }

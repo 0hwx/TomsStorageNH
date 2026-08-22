@@ -54,10 +54,43 @@ public class TomsConfig {
     public static void register() {
         ConfigurationManager.registerConfig(TomsConfig.class);
         ConfigurationManager.registerConfig(Client.class);
+        ConfigurationManager.registerConfig(Content.class);
     }
 
     public static int getInventoryConnectorRangeSquared() {
         return inventoryConnectorRange * inventoryConnectorRange;
+    }
+
+    @Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "content")
+    public static final class Content {
+
+        @Config.Comment("Register the Inventory Connector.")
+        @Config.DefaultBoolean(true)
+        public static boolean inventoryConnector;
+
+        @Config.Comment("Register the Storage Terminal.")
+        @Config.DefaultBoolean(true)
+        public static boolean storageTerminal;
+
+        @Config.Comment("Register the Crafting Terminal.")
+        @Config.DefaultBoolean(true)
+        public static boolean craftingTerminal;
+
+        @Config.Comment("Register the Inventory Trim.")
+        @Config.DefaultBoolean(true)
+        public static boolean trim;
+
+        @Config.Comment("Register the Inventory Cable.")
+        @Config.DefaultBoolean(true)
+        public static boolean inventoryCable;
+
+        @Config.Comment("Register the Basic Inventory Hopper.")
+        @Config.DefaultBoolean(true)
+        public static boolean inventoryHopper;
+
+        @Config.Comment("Register the Wireless Terminal.")
+        @Config.DefaultBoolean(true)
+        public static boolean wirelessTerminal;
     }
 
     /** Client-local terminal state. The search preset is written back when a terminal closes. */

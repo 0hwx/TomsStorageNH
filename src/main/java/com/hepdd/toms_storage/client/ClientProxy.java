@@ -35,17 +35,23 @@ public class ClientProxy extends CommonProxy {
 
         BlockProperty<ForgeDirection> terminalFacing = TerminalStateProperties.facing();
         BlockProperty<String> terminalPos = TerminalStateProperties.pos();
-        for (Block terminal : new Block[] { ModBlocks.STORAGE_TERMINAL.get(), ModBlocks.CRAFTING_TERMINAL.get() }) {
-            BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalFacing, ForgeDirection.NORTH);
-            BlockPropertyRegistry.registerBlockItemProperty(terminal, terminalPos, MountPos.CENTER.variant());
+        for (ModBlocks terminal : new ModBlocks[] { ModBlocks.STORAGE_TERMINAL, ModBlocks.CRAFTING_TERMINAL }) {
+            if (!terminal.isEnabled()) continue;
+            Block block = terminal.get();
+            BlockPropertyRegistry.registerBlockItemProperty(block, terminalFacing, ForgeDirection.NORTH);
+            BlockPropertyRegistry.registerBlockItemProperty(block, terminalPos, MountPos.CENTER.variant());
         }
-        BlockPropertyRegistry.registerBlockItemProperty(
-            ModBlocks.INVENTORY_HOPPER.get(),
-            DirectionBlockProperty.facing(),
-            ForgeDirection.DOWN);
-        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
-            BlockPropertyRegistry
-                .registerProperty(ModBlocks.INVENTORY_CABLE.get(), CableStateProperties.connection(side));
+        if (ModBlocks.INVENTORY_HOPPER.isEnabled()) {
+            BlockPropertyRegistry.registerBlockItemProperty(
+                ModBlocks.INVENTORY_HOPPER.get(),
+                DirectionBlockProperty.facing(),
+                ForgeDirection.DOWN);
+        }
+        if (ModBlocks.INVENTORY_CABLE.isEnabled()) {
+            for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                BlockPropertyRegistry
+                    .registerProperty(ModBlocks.INVENTORY_CABLE.get(), CableStateProperties.connection(side));
+            }
         }
     }
 }

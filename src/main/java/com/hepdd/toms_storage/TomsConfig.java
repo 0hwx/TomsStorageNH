@@ -91,6 +91,12 @@ public class TomsConfig {
         @Config.Comment("Register the Wireless Terminal.")
         @Config.DefaultBoolean(true)
         public static boolean wirelessTerminal;
+
+        @Config.Comment({ "Register this mod's crafting recipes.",
+            "Turning this off leaves every block and item in the game but gives them no recipe, for packs"
+                + " that supply their own through a tweaker." })
+        @Config.DefaultBoolean(true)
+        public static boolean registerRecipes;
     }
 
     /** Client-local terminal state. The search preset is written back when a terminal closes. */

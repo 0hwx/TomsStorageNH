@@ -36,7 +36,7 @@ public class CommonProxy {
 
     public void init(FMLInitializationEvent event) {
         ModTileEntities.init();
-        ModRecipes.init();
+        if (TomsConfig.Content.registerRecipes) ModRecipes.init();
 
         StorageNetworkEvents networkEvents = new StorageNetworkEvents();
         FMLCommonHandler.instance()

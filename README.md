@@ -79,6 +79,8 @@ The `content` category of the same file has one switch per block and item, all o
 
 Turning one off skips its block or item, its tile entity, and its own recipe. Recipes that merely *use* it stay craftable: the slot either falls back to a substitute — the Crafting Terminal takes a chest in place of a disabled Storage Terminal — or is stripped out, as the Basic Inventory Hopper's cable slot is. A recipe is only dropped when its result is disabled, or when stripping would leave it with no ingredients at all. A pack can trim the mod down this way without a recipe tweaker.
 
+`registerRecipes` (default true) is the blunt version: turn it off and every block and item stays in the game with no recipe at all, for packs that supply their own through a tweaker.
+
 These are read while registering, so a change needs a restart, and blocks already placed in a world will vanish when their entry is switched off.
 
 ## Quick Start

@@ -14,7 +14,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
+import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
 import com.hepdd.toms_storage.common.tile.TileEntityInventoryHopper;
 
 import cpw.mods.fml.relauncher.Side;
@@ -103,9 +104,22 @@ public class BlockInventoryHopper extends BlockContainer {
     }
 
     @Override
+    public void onBlockAdded(World world, int x, int y, int z) {
+        super.onBlockAdded(world, x, y, z);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
+    @Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+        super.breakBlock(world, x, y, z, block, meta);
+    }
+
+    @Override
     public void onNeighborBlockChange(World world, int x, int y, int z, net.minecraft.block.Block neighbor) {
         TileEntity tile = world.getTileEntity(x, y, z);
         if (tile instanceof TileEntityInventoryHopper) ((TileEntityInventoryHopper) tile).markNetworkDirty();
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
     }
 
     public static class ItemInventoryHopper extends ItemBlock {

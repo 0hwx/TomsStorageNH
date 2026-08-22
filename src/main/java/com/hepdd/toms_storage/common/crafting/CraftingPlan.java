@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.crafting.CraftingInventorySnapshot.Extraction;
+import com.hepdd.toms_storage.common.crafting.CraftingInventorySnapshot.Extraction;
 
 public final class CraftingPlan {
 

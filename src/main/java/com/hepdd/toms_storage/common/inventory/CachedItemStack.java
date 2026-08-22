@@ -1,11 +1,11 @@
-package com.hepdd.toms_storage.inventory;
+package com.hepdd.toms_storage.common.inventory;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import com.cleanroommc.modularui.utils.item.ItemHandlerHelper;
 import com.github.bsideup.jabel.Desugar;
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 /**
  * Immutable (identity, count) pair for the storage network's aggregated contents and the MUI2 terminal.
@@ -38,7 +38,7 @@ public record CachedItemStack(ItemStack stack, long count) {
     public boolean equals(Object other) {
         if (this == other) return true;
         if (!(other instanceof CachedItemStack that)) return false;
-        return StorageItemUtils.areItemStacksEqual(stack, that.stack, true);
+        return StorageUtils.areItemStacksEqual(stack, that.stack, true);
     }
 
     @Override

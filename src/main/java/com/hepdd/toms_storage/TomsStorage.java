@@ -6,7 +6,7 @@ import net.minecraft.item.Item;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.hepdd.toms_storage.proxy.CommonProxy;
+import com.hepdd.toms_storage.common.CommonProxy;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.common.Mod;
@@ -21,7 +21,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
     version = Tags.VERSION,
     name = TomsStorage.NAME,
     acceptedMinecraftVersions = "[1.7.10]",
-    dependencies = "required-after:NotEnoughItems;required-after:unimixins")
+    dependencies = "required-after:NotEnoughItems;required-after:unimixins;required-after:gtnhlib")
 public class TomsStorage {
 
     public static final String MODID = "tomsstorage";
@@ -30,8 +30,8 @@ public class TomsStorage {
     public static final String NETWORK_CHANNEL = "TomsStorage";
 
     @SidedProxy(
-        clientSide = "com.hepdd.toms_storage.proxy.ClientProxy",
-        serverSide = "com.hepdd.toms_storage.proxy.CommonProxy")
+        clientSide = "com.hepdd.toms_storage.client.ClientProxy",
+        serverSide = "com.hepdd.toms_storage.common.CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.Instance(MODID)

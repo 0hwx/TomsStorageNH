@@ -16,13 +16,13 @@ import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.widgets.slot.InventoryCraftingWrapper;
 import com.cleanroommc.modularui.widgets.slot.ModularCraftingSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.common.crafting.AutoCraftRequest;
+import com.hepdd.toms_storage.common.crafting.SingleAutoCraftExecutor;
+import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
 import com.hepdd.toms_storage.compat.nei.NeiCompat;
-import com.hepdd.toms_storage.crafting.AutoCraftRequest;
-import com.hepdd.toms_storage.crafting.SingleAutoCraftExecutor;
-import com.hepdd.toms_storage.inventory.TerminalNetworkService;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiOverlayButton;
@@ -189,7 +189,7 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
         ItemStack result = null;
         for (int i = 0; i < player.inventory.mainInventory.length && count > 0; i++) {
             ItemStack stack = player.inventory.mainInventory[i];
-            if (stack != null && StorageItemUtils.areItemStacksEqual(stack, target, true)) {
+            if (stack != null && StorageUtils.areItemStacksEqual(stack, target, true)) {
                 int take = Math.min(count, stack.stackSize);
                 if (result == null) {
                     result = stack.copy();

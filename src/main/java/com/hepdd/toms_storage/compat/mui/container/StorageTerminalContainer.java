@@ -8,9 +8,9 @@ import net.minecraft.item.ItemStack;
 import com.cleanroommc.modularui.screen.ModularContainer;
 import com.cleanroommc.modularui.utils.item.SlotItemHandler;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
+import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.slot.TerminalGridSlot;
-import com.hepdd.toms_storage.inventory.TerminalNetworkService;
 
 public class StorageTerminalContainer extends ModularContainer {
 

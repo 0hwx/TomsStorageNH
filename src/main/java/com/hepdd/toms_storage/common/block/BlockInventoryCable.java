@@ -19,8 +19,10 @@ import com.gtnewhorizon.gtnhlib.client.model.baked.BakedModel;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ResourceLoc;
 import com.hepdd.toms_storage.TomsStorage;
-import com.hepdd.toms_storage.client.TooltipHelper;
-import com.hepdd.toms_storage.inventory.IStorageNetworkEndpoint;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
+import com.hepdd.toms_storage.common.inventory.network.NetworkGraph;
+import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkEndpoint;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.relauncher.Side;
@@ -42,6 +44,24 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
         setBlockBounds(MIN, MIN, MIN, MAX, MAX, MAX);
     }
 
+    @Override
+    public void onBlockAdded(World world, int x, int y, int z) {
+        super.onBlockAdded(world, x, y, z);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
+    @Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+        super.breakBlock(world, x, y, z, block, meta);
+    }
+
+    @Override
+    public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
+        super.onNeighborBlockChange(world, x, y, z, neighbor);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
     public boolean connectsTo(IBlockAccess world, int x, int y, int z, ForgeDirection direction) {
         int nextX = x + direction.offsetX;
         int nextY = y + direction.offsetY;
@@ -49,10 +69,8 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
         Block block = world.getBlock(nextX, nextY, nextZ);
         if (block == ModBlocks.INVENTORY_CABLE.get() || block == ModBlocks.INVENTORY_CONNECTOR.get()) return true;
         TileEntity tile = world.getTileEntity(nextX, nextY, nextZ);
-        if (tile instanceof IStorageNetworkEndpoint) {
-            return ((IStorageNetworkEndpoint) tile).canConnectNetworkFrom(direction.getOpposite());
-        }
-        return false;
+        StorageNetworkEndpoint endpoint = NetworkGraph.endpointAt(tile, direction.getOpposite());
+        return endpoint != null && endpoint.canConnectNetworkFrom(direction.getOpposite());
     }
 
     @Override

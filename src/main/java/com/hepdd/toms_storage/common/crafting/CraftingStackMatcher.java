@@ -1,9 +1,9 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 public final class CraftingStackMatcher {
 
@@ -24,7 +24,7 @@ public final class CraftingStackMatcher {
             }
         }
 
-        return StorageItemUtils.areItemStacksEqual(recipeItem, candidate, true);
+        return StorageUtils.areItemStacksEqual(recipeItem, candidate, true);
     }
 
     public static boolean matchesOutput(ItemStack expected, ItemStack actual) {

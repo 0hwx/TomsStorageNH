@@ -30,15 +30,12 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.hepdd.toms_storage.ModConfig;
-import com.hepdd.toms_storage.common.search.TerminalSearchMode;
-import com.hepdd.toms_storage.common.sort.SortDirection;
-import com.hepdd.toms_storage.common.sort.SortingTypes;
+import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.container.StorageTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotPlayer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotTerminal;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
-import com.hepdd.toms_storage.inventory.TerminalNetworkService;
 
 public class StorageTerminalPanel extends ModularPanel {
 
@@ -57,7 +54,7 @@ public class StorageTerminalPanel extends ModularPanel {
     /** Panel name doubles as the GUI texture name; buttons live on the same sheet as the background. */
     protected final String textureName;
 
-    private TerminalSearchMode searchMode = ModConfig.Client.terminalSearchMode;
+    private TileEntityStorageTerminal.TerminalSearchMode searchMode = ModConfig.Client.terminalSearchMode;
     private StringSyncValue searchValue;
     private TerminalGridSyncHandler grid;
 
@@ -137,7 +134,7 @@ public class StorageTerminalPanel extends ModularPanel {
 
     private void saveSearchSettings() {
         String retained = searchMode.keepText() && searchValue != null ? searchValue.getValue() : "";
-        ModConfig.Client.saveTerminalSearchSettings(searchMode, retained, true);
+        ModConfig.Client.saveTerminalSearchSettings(searchMode, retained);
     }
 
     @Override
@@ -164,19 +161,19 @@ public class StorageTerminalPanel extends ModularPanel {
     }
 
     private void addSortButtons(PanelSyncManager sync) {
-        EnumSyncValue<SortingTypes, ?> sortType = SyncHandlers
-            .enumValue(SortingTypes.class, tile::getSortType, tile::setSortType);
+        EnumSyncValue<TileEntityStorageTerminal.SortingTypes, ?> sortType = SyncHandlers
+            .enumValue(TileEntityStorageTerminal.SortingTypes.class, tile::getSortType, tile::setSortType);
         sortType.allowC2S(true);
         sync.syncValue("terminal_sort_type", 1, sortType);
 
-        EnumSyncValue<SortDirection, ?> sortDirection = SyncHandlers
-            .enumValue(SortDirection.class, tile::getSortDirection, tile::setSortDirection);
+        EnumSyncValue<TileEntityStorageTerminal.SortDirection, ?> sortDirection = SyncHandlers
+            .enumValue(TileEntityStorageTerminal.SortDirection.class, tile::getSortDirection, tile::setSortDirection);
         sortDirection.allowC2S(true);
         sync.syncValue("terminal_sort_direction", 2, sortDirection);
 
         // Button faces come off the panel's own texture sheet: 194 + state*16 across, one row per button.
         child(new ButtonWidget<>().onMousePressed(mouseButton -> {
-            SortingTypes[] values = SortingTypes.VALUES;
+            TileEntityStorageTerminal.SortingTypes[] values = TileEntityStorageTerminal.SortingTypes.VALUES;
             sortType.setValue(
                 values[(sortType.getValue()
                     .ordinal() + 1) % values.length],
@@ -212,7 +209,7 @@ public class StorageTerminalPanel extends ModularPanel {
             .background(
                 new DynamicDrawable(
                     () -> buttonTexture(
-                        194 + (sortDirection.getValue() == SortDirection.DESCENDING ? 16 : 0),
+                        194 + (sortDirection.getValue() == TileEntityStorageTerminal.SortDirection.DESCENDING ? 16 : 0),
                         46,
                         16,
                         16)))
@@ -220,7 +217,8 @@ public class StorageTerminalPanel extends ModularPanel {
                 t -> t.addLine(
                     IKey.lang(
                         "tooltip.tomsstorage.direction."
-                            + (sortDirection.getValue() == SortDirection.DESCENDING ? 1 : 0))))
+                            + (sortDirection.getValue() == TileEntityStorageTerminal.SortDirection.DESCENDING ? 1
+                                : 0))))
             .tooltipAutoUpdate(true)
             .pos(-18, 23)
             .size(16, 16));

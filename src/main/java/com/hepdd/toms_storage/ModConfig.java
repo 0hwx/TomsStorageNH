@@ -1,8 +1,9 @@
 package com.hepdd.toms_storage;
 
+import static com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.TerminalSearchMode;
+
 import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
-import com.hepdd.toms_storage.common.search.TerminalSearchMode;
 
 @Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "general")
 public class ModConfig {
@@ -30,6 +31,20 @@ public class ModConfig {
     @Config.RangeInt(min = 4, max = 64)
     public static int wirelessReach;
 
+    @Config.Comment("Ticks between full Inventory Connector topology rescans. Lower reacts faster to blocks placed by other mods, higher costs less.")
+    @Config.DefaultInt(100)
+    @Config.RangeInt(min = 20, max = 1200)
+    public static int networkTopologyRescanInterval;
+
+    @Config.Comment("Network slots re-read per tick per world while looking for changes made by other mods.")
+    @Config.DefaultInt(512)
+    @Config.RangeInt(min = 32, max = 8192)
+    public static int networkSweepSlotsPerTick;
+
+    @Config.Comment("Show storage network statistics when right-clicking an Inventory Connector.")
+    @Config.DefaultBoolean(false)
+    public static boolean debugNetworkStats;
+
     public static void register() {
         ConfigurationManager.registerConfig(ModConfig.class);
         ConfigurationManager.registerConfig(Client.class);
@@ -49,16 +64,12 @@ public class ModConfig {
 
         @Config.Comment("Last locally retained terminal search.")
         @Config.DefaultString("")
+        @Config.Ignore
         public static String terminalLastSearch;
 
-        @Config.Comment("Whether the old per-terminal search value has been migrated to the local setting.")
-        @Config.DefaultBoolean(false)
-        public static boolean terminalSearchMigrated;
-
-        public static void saveTerminalSearchSettings(TerminalSearchMode mode, String search, boolean migrated) {
+        public static void saveTerminalSearchSettings(TerminalSearchMode mode, String search) {
             terminalSearchMode = mode == null ? TerminalSearchMode.STANDARD : mode;
             terminalLastSearch = search == null ? "" : search;
-            terminalSearchMigrated = migrated;
             ConfigurationManager.save(Client.class);
         }
     }

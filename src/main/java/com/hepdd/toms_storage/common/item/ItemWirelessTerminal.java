@@ -12,7 +12,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
 import com.hepdd.toms_storage.ModConfig;
-import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.TerminalGuiFactory;
 import com.hepdd.toms_storage.registry.ModItems;

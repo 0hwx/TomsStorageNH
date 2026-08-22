@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.common.crafting.CraftingInventorySnapshot.Extraction;
+import com.hepdd.toms_storage.common.crafting.CraftingPlan.CraftOperation;
+import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.nei.NEIDebug;
 import com.hepdd.toms_storage.compat.nei.RecipeNbtSerializer;
-import com.hepdd.toms_storage.crafting.CraftingInventorySnapshot.Extraction;
-import com.hepdd.toms_storage.crafting.CraftingPlan.CraftOperation;
-import com.hepdd.toms_storage.inventory.TerminalNetworkService;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 public final class SingleAutoCraftExecutor {
 
@@ -103,7 +103,7 @@ public final class SingleAutoCraftExecutor {
     private static boolean isExpectedExtraction(ItemStack expected, ItemStack actual) {
         return expected != null && actual != null
             && actual.stackSize >= expected.stackSize
-            && StorageItemUtils.areItemStacksEqual(expected, actual, true);
+            && StorageUtils.areItemStacksEqual(expected, actual, true);
     }
 
     private static void restoreConsumed(TileEntityStorageTerminal terminal, List<ItemStack> consumed) {

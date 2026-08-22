@@ -33,8 +33,6 @@ public final class ConnectorRangePreview {
     private float[] gridVertices;
     private World lastWorld;
 
-    private ConnectorRangePreview() {}
-
     public void showOrToggle(PacketConnectorRangePreview message) {
         Minecraft minecraft = Minecraft.getMinecraft();
         World world = minecraft.theWorld;

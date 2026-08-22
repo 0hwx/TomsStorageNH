@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.proxy;
+package com.hepdd.toms_storage.client;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -10,9 +10,9 @@ import com.gtnewhorizon.gtnhlib.blockstate.properties.DirectionBlockProperty;
 import com.gtnewhorizon.gtnhlib.blockstate.registry.BlockPropertyRegistry;
 import com.gtnewhorizon.gtnhlib.client.model.loading.ModelRegistry;
 import com.hepdd.toms_storage.TomsStorage;
-import com.hepdd.toms_storage.client.ConnectorRangePreview;
 import com.hepdd.toms_storage.client.model.CableStateProperties;
 import com.hepdd.toms_storage.client.model.TerminalStateProperties;
+import com.hepdd.toms_storage.common.CommonProxy;
 import com.hepdd.toms_storage.common.block.BlockStorageTerminal.MountPos;
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
 import com.hepdd.toms_storage.registry.ModBlocks;

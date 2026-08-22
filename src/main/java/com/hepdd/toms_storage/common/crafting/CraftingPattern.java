@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import net.minecraft.item.ItemStack;
 

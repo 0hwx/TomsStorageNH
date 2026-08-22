@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
-import com.hepdd.toms_storage.inventory.CachedItemStack;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 public final class CraftingInventorySnapshot {
 
@@ -73,7 +73,7 @@ public final class CraftingInventorySnapshot {
     private static void addTo(List<Entry> entries, ItemStack stack) {
         if (stack == null || stack.stackSize <= 0) return;
         for (Entry entry : entries) {
-            if (StorageItemUtils.areItemStacksEqual(entry.stack, stack, true)) {
+            if (StorageUtils.areItemStacksEqual(entry.stack, stack, true)) {
                 entry.amount += stack.stackSize;
                 return;
             }

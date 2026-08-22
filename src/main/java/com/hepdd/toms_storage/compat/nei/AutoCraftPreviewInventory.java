@@ -7,10 +7,10 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.hepdd.toms_storage.StorageItemUtils;
-import com.hepdd.toms_storage.crafting.CraftingRemainderHandler;
-import com.hepdd.toms_storage.crafting.CraftingStackMatcher;
-import com.hepdd.toms_storage.inventory.CachedItemStack;
+import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
+import com.hepdd.toms_storage.common.crafting.CraftingStackMatcher;
+import com.hepdd.toms_storage.common.inventory.CachedItemStack;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 public final class AutoCraftPreviewInventory {
 
@@ -127,7 +127,7 @@ public final class AutoCraftPreviewInventory {
     private static void addStack(List<CachedItemStack> preview, ItemStack stack) {
         for (int i = 0; i < preview.size(); i++) {
             CachedItemStack stored = preview.get(i);
-            if (StorageItemUtils.areItemStacksEqual(stored.stack(), stack, true)) {
+            if (StorageUtils.areItemStacksEqual(stored.stack(), stack, true)) {
                 preview.set(i, stored.withCount(stored.count() + stack.stackSize));
                 return;
             }

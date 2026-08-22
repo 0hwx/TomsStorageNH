@@ -11,7 +11,7 @@ import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.hepdd.toms_storage.compat.mui.search.TerminalFormat;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
-import com.hepdd.toms_storage.gui.SlotAction;
+import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler.SlotAction;
 
 public class ItemSlotTerminal extends ItemSlot {
 

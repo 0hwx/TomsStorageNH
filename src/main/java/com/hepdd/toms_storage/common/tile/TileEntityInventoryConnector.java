@@ -1,222 +1,263 @@
 package com.hepdd.toms_storage.common.tile;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Locale;
 
-import net.minecraft.block.Block;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
 import com.hepdd.toms_storage.ModConfig;
-import com.hepdd.toms_storage.inventory.CachedItemStack;
-import com.hepdd.toms_storage.inventory.IStorageNetworkAccess;
-import com.hepdd.toms_storage.inventory.IStorageNetworkEndpoint;
-import com.hepdd.toms_storage.inventory.NetworkItemHandler;
-import com.hepdd.toms_storage.inventory.StorageInventoryUtils;
-import com.hepdd.toms_storage.registry.ModBlocks;
+import com.hepdd.toms_storage.common.inventory.CachedItemStack;
+import com.hepdd.toms_storage.common.inventory.NetworkItemHandler;
+import com.hepdd.toms_storage.common.inventory.network.NetworkGraph;
+import com.hepdd.toms_storage.common.inventory.network.NetworkItemIndex;
+import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetwork;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkEndpoint;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkHost;
 
-public class TileEntityInventoryConnector extends TileEntity implements IStorageNetworkAccess, CapabilityProvider {
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-    // How often the aggregate is re-scanned for externally-changed items when nobody has dirtied it.
-    private static final int CONTENT_REBUILD_INTERVAL = 10;
+public class TileEntityInventoryConnector extends TileEntity
+    implements StorageNetwork, StorageNetworkHost, CapabilityProvider {
+
+    // Floor between dirty-driven rebuilds, so repeated neighbour changes cannot thrash the BFS.
+    private static final int MIN_REBUILD_INTERVAL = 5;
 
     private final NetworkItemHandler inventory = new NetworkItemHandler();
+    private final NetworkItemIndex index = new NetworkItemIndex();
+    // Writes are recorded and applied in a batch, so the index's slot lists stay stable while an
+    // insert or extract is iterating them.
+    private final IntArrayList pendingSlots = new IntArrayList();
+    private NetworkGraph graph = NetworkGraph.EMPTY;
+    // Not Long.MIN_VALUE: "now - lastScanTick" would overflow. The initial build comes from topologyDirty.
     private long lastScanTick = -1L;
-    private boolean cableScanLimitReached;
-    private boolean cableNetworkConflict;
-
-    private List<CachedItemStack> aggregated = Collections.emptyList();
-    private long lastAggregateTick = Long.MIN_VALUE;
-    private boolean contentsDirty = true;
-    private long contentSignature;
-    private int contentRevision;
+    private boolean topologyDirty = true;
+    private boolean registered;
+    private List<NetworkGraph.EndpointRef> attachedEndpoints = Collections.emptyList();
+    private int sweepCursor;
+    private long lastRebuildNanos;
 
     @Override
     public IItemHandler getStorageInventory() {
-        if (!worldObj.isRemote && lastScanTick != worldObj.getTotalWorldTime()) {
-            scanInventories();
-        }
         return inventory;
     }
 
     @Override
     public List<CachedItemStack> getAggregatedStacks() {
-        ensureAggregated();
-        return aggregated;
+        flushPendingWrites();
+        return index.aggregate();
     }
 
     @Override
     public int getContentsRevision() {
-        ensureAggregated();
-        return contentRevision;
+        flushPendingWrites();
+        return index.revision();
     }
 
+    /**
+     * Writes we cause already update the index exactly, so this only asks the sweep to start over - a
+     * cheap way for a caller that suspects a foreign change to get an early full pass.
+     */
     @Override
     public void markContentsDirty() {
-        contentsDirty = true;
+        sweepCursor = 0;
     }
 
+    // No StorageNetwork branch: this tile implements it, so Capabilities' direct cast answers first.
     @Override
     public <T> T getCapability(Class<T> capability, ForgeDirection side) {
         if (capability == IItemHandler.class) return capability.cast(getStorageInventory());
         return null;
     }
 
-    private void ensureAggregated() {
-        if (worldObj == null || worldObj.isRemote) return;
-        long now = worldObj.getTotalWorldTime();
-        if (!contentsDirty && now - lastAggregateTick < CONTENT_REBUILD_INTERVAL) return;
-        lastAggregateTick = now;
-        contentsDirty = false;
+    @Override
+    public boolean isNetworkValid() {
+        return !isInvalid();
+    }
 
-        List<CachedItemStack> list = StorageInventoryUtils.aggregate(getStorageInventory());
-        long signature = 0L;
-        for (CachedItemStack cached : list) {
-            long count = cached.count();
-            signature += cached.hashCode() * 31L + (count ^ (count >>> 32));
+    @Override
+    public boolean hasEndpoint(StorageNetworkEndpoint endpoint) {
+        return graph.hasEndpoint(endpoint);
+    }
+
+    @Override
+    public boolean containsPosition(long packedPos) {
+        return graph.contains(packedPos);
+    }
+
+    public NetworkItemIndex getIndex() {
+        flushPendingWrites();
+        return index;
+    }
+
+    /** Applies writes recorded since the last flush. Cheap: one slot re-read each. */
+    @Override
+    public void flushPendingWrites() {
+        if (pendingSlots.isEmpty()) return;
+        for (int i = 0; i < pendingSlots.size(); i++) {
+            int slot = pendingSlots.getInt(i);
+            index.applySlot(slot, inventory.getStackInSlot(slot));
         }
-        if (signature != contentSignature) {
-            contentSignature = signature;
-            contentRevision++;
-        }
-        aggregated = list;
+        pendingSlots.clear();
     }
 
     @Override
     public void updateEntity() {
-        if (!worldObj.isRemote && worldObj.getTotalWorldTime() % 20L == 0L) {
-            scanInventories();
+        if (worldObj == null || worldObj.isRemote) return;
+        if (!registered) {
+            // Registering here rather than in validate(): worldObj is not reliably usable that early.
+            StorageNetworkRegistry registry = StorageNetworkRegistry.get(worldObj);
+            if (registry != null) registry.register(this);
+            registered = true;
+        }
+        long now = worldObj.getTotalWorldTime();
+        long sinceLast = now - lastScanTick;
+        // Coalesce dirty bursts: a redstone clock beside a hopper fires onNeighborBlockChange every tick,
+        // and rebuilding the whole graph that often would undo the point of this rework.
+        if (topologyDirty && sinceLast >= MIN_REBUILD_INTERVAL
+            || sinceLast >= ModConfig.networkTopologyRescanInterval) {
+            rebuildGraph();
         }
     }
 
-    private void scanInventories() {
-        lastScanTick = worldObj.getTotalWorldTime();
-        inventory.clear();
-        cableScanLimitReached = false;
-        cableNetworkConflict = false;
+    /** One tick's share of the world sweep budget: re-read slots so foreign changes are picked up. */
+    @Override
+    public void tickNetwork(int slotBudget) {
+        if (worldObj == null || worldObj.isRemote) return;
+        flushPendingWrites();
+        int total = graph.totalSlots();
+        if (total <= 0 || slotBudget <= 0) return;
 
-        Deque<ChunkCoordinates> toCheck = new ArrayDeque<>();
-        Set<String> checked = new HashSet<>();
-        ChunkCoordinates start = new ChunkCoordinates(xCoord, yCoord, zCoord);
-        toCheck.addLast(start);
-        checked.add(getKey(start));
-        int cableNodes = 0;
-        List<EndpointRef> cableEndpoints = new ArrayList<>();
+        int budget = Math.min(slotBudget, total);
+        int end = sweepCursor + budget;
+        for (int i = sweepCursor; i < end; i++) {
+            int slot = i >= total ? i - total : i;
+            ItemStack stack = inventory.getStackInSlot(slot);
+            // That read hit a dead member and asked for a rebuild; recording nulls now would blank
+            // the member's items until the rebuild lands.
+            if (topologyDirty) return;
+            index.applySlot(slot, stack);
+        }
 
-        while (!toCheck.isEmpty()) {
-            ChunkCoordinates current = toCheck.removeFirst();
-            Block currentBlock = worldObj.getBlock(current.posX, current.posY, current.posZ);
-            boolean currentIsTrim = currentBlock == ModBlocks.TRIM.get();
-            boolean currentIsCableNode = currentBlock == ModBlocks.INVENTORY_CABLE.get()
-                || current.posX == xCoord && current.posY == yCoord && current.posZ == zCoord;
-
-            for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
-                ChunkCoordinates next = new ChunkCoordinates(
-                    current.posX + direction.offsetX,
-                    current.posY + direction.offsetY,
-                    current.posZ + direction.offsetZ);
-                String key = getKey(next);
-                if (!worldObj.getChunkProvider()
-                    .chunkExists(next.posX >> 4, next.posZ >> 4)) continue;
-
-                Block nextBlock = worldObj.getBlock(next.posX, next.posY, next.posZ);
-                TileEntity tile = worldObj.getTileEntity(next.posX, next.posY, next.posZ);
-
-                if (currentBlock == ModBlocks.INVENTORY_CABLE.get() && tile instanceof TileEntityInventoryConnector
-                    && tile != this) {
-                    cableNetworkConflict = true;
-                    continue;
-                }
-
-                if (currentIsCableNode && tile instanceof IStorageNetworkEndpoint) {
-                    IStorageNetworkEndpoint endpoint = (IStorageNetworkEndpoint) tile;
-                    if (endpoint.canConnectNetworkFrom(direction.getOpposite())) {
-                        cableEndpoints.add(new EndpointRef(endpoint, direction.getOpposite()));
-                    }
-                    continue;
-                }
-
-                if (checked.contains(key)) continue;
-
-                if (currentIsCableNode && nextBlock == ModBlocks.INVENTORY_CABLE.get()) {
-                    if (cableNodes >= ModConfig.maxInventoryCableNodes) {
-                        cableScanLimitReached = true;
-                        continue;
-                    }
-                    checked.add(key);
-                    cableNodes++;
-                    toCheck.addLast(next);
-                    continue;
-                }
-
-                if (nextBlock == ModBlocks.INVENTORY_CABLE.get() || tile instanceof IStorageNetworkEndpoint) continue;
-                if (currentBlock == ModBlocks.INVENTORY_CABLE.get()
-                    || getDistanceSq(next) > ModConfig.getInventoryConnectorRangeSquared()) continue;
-                checked.add(key);
-
-                if (tile instanceof TileEntityInventoryConnector) {
-                    continue;
-                }
-
-                // NOTE: the TileEntityInventoryConnector skip above MUST stay above this branch -- asHandler
-                // would otherwise return another connector's whole network and nest it inside this one.
-                IItemHandler handler = StorageInventoryUtils.asHandler(tile, direction.getOpposite());
-                if (handler != null && (!ModConfig.onlyTrimsConnect || currentIsTrim)) {
-                    inventory.add(handler);
-                    toCheck.addLast(next);
-                    continue;
-                }
-
-                if (nextBlock == ModBlocks.TRIM.get()) {
-                    toCheck.addLast(next);
+        if (end >= total) {
+            // A member that changed size invalidates the prefix sums, so a full pass also checks them.
+            for (NetworkGraph.MemberRef member : graph.members()) {
+                if (!member.isUsable() || member.handler.getSlots() != member.slots) {
+                    topologyDirty = true;
+                    break;
                 }
             }
         }
+        sweepCursor = end % total;
+    }
 
-        for (EndpointRef endpoint : cableEndpoints) {
-            if (cableNetworkConflict) {
+    @Override
+    public void markTopologyDirty() {
+        topologyDirty = true;
+    }
+
+    @Override
+    public boolean touchesPosition(long packedPos) {
+        return graph.touches(packedPos);
+    }
+
+    @Override
+    public void onNetworkSlotWritten(int globalSlot) {
+        pendingSlots.add(globalSlot);
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        unregister();
+    }
+
+    @Override
+    public void onChunkUnload() {
+        super.onChunkUnload();
+        unregister();
+    }
+
+    private void unregister() {
+        if (!registered || worldObj == null) return;
+        for (NetworkGraph.EndpointRef endpoint : attachedEndpoints) {
+            endpoint.endpoint.detachNetwork(this);
+        }
+        attachedEndpoints = Collections.emptyList();
+        StorageNetworkRegistry registry = StorageNetworkRegistry.get(worldObj);
+        if (registry != null) registry.unregister(this);
+        registered = false;
+    }
+
+    private void rebuildGraph() {
+        long start = System.nanoTime();
+        topologyDirty = false;
+        lastScanTick = worldObj.getTotalWorldTime();
+        NetworkGraph previousGraph = graph;
+        graph = NetworkGraph.build(this);
+        inventory.setGraph(graph);
+        inventory.setHost(this);
+        inventory.setIndex(index);
+
+        // Only repopulate when the slot layout actually moved. The periodic rescan usually finds an
+        // identical layout, and rebuilding the index there would bump the revision every time - making
+        // every open terminal re-sort and resend its whole list on a timer, which is the cost this
+        // rework exists to remove. A layout match keeps every global slot id valid; if a member's tile
+        // was swapped for an identical one, the sweep corrects its contents within one pass.
+        if (!graph.sameLayout(previousGraph)) {
+            pendingSlots.clear();
+            int total = graph.totalSlots();
+            index.resize(total);
+            for (int slot = 0; slot < total; slot++) {
+                index.applySlot(slot, inventory.getStackInSlot(slot));
+            }
+            sweepCursor = 0;
+        }
+
+        List<NetworkGraph.EndpointRef> current = graph.endpoints();
+        for (NetworkGraph.EndpointRef previous : attachedEndpoints) {
+            if (!graph.hasEndpoint(previous.endpoint)) previous.endpoint.detachNetwork(this);
+        }
+        for (NetworkGraph.EndpointRef endpoint : current) {
+            if (graph.cableNetworkConflict()) {
                 endpoint.endpoint.markNetworkConflict();
             } else {
                 endpoint.endpoint.attachNetwork(this, endpoint.side);
             }
         }
+        attachedEndpoints = current;
+        lastRebuildNanos = System.nanoTime() - start;
+    }
+
+    /** Total slots across the network, for the connector's chat readout. */
+    public int getTotalSlots() {
+        return graph.totalSlots();
+    }
+
+    /** Debug readout, so the rework's effect can be measured rather than asserted. */
+    public String getNetworkStats() {
+        flushPendingWrites();
+        return String.format(
+            Locale.ROOT,
+            "members=%d slots=%d free=%d items=%d rebuild=%.2fms sweep=%d",
+            graph.members().length,
+            graph.totalSlots(),
+            index.emptySlotCount(),
+            index.distinctItems(),
+            lastRebuildNanos / 1_000_000.0D,
+            sweepCursor);
     }
 
     public boolean isCableScanLimitReached() {
-        return cableScanLimitReached;
+        return graph.cableScanLimitReached();
     }
 
     public boolean hasCableNetworkConflict() {
-        return cableNetworkConflict;
-    }
-
-    private double getDistanceSq(ChunkCoordinates coordinates) {
-        double dx = coordinates.posX - xCoord;
-        double dy = coordinates.posY - yCoord;
-        double dz = coordinates.posZ - zCoord;
-        return dx * dx + dy * dy + dz * dz;
-    }
-
-    private String getKey(ChunkCoordinates coordinates) {
-        return coordinates.posX + ":" + coordinates.posY + ":" + coordinates.posZ;
-    }
-
-    private static final class EndpointRef {
-
-        private final IStorageNetworkEndpoint endpoint;
-        private final ForgeDirection side;
-
-        private EndpointRef(IStorageNetworkEndpoint endpoint, ForgeDirection side) {
-            this.endpoint = endpoint;
-            this.side = side;
-        }
+        return graph.cableNetworkConflict();
     }
 }

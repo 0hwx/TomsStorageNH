@@ -15,11 +15,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 
-import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.hepdd.toms_storage.ModConfig;
-import com.hepdd.toms_storage.ModNetwork;
-import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
+import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
 import com.hepdd.toms_storage.common.tile.TileEntityInventoryConnector;
+import com.hepdd.toms_storage.network.ModNetwork;
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
@@ -38,6 +38,24 @@ public class BlockInventoryConnector extends BlockContainer {
     @Override
     public TileEntity createNewTileEntity(World world, int metadata) {
         return new TileEntityInventoryConnector();
+    }
+
+    @Override
+    public void onBlockAdded(World world, int x, int y, int z) {
+        super.onBlockAdded(world, x, y, z);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
+    @Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+        super.breakBlock(world, x, y, z, block, meta);
+    }
+
+    @Override
+    public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
+        super.onNeighborBlockChange(world, x, y, z, neighbor);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
     }
 
     @Override
@@ -61,23 +79,26 @@ public class BlockInventoryConnector extends BlockContainer {
                 return true;
             }
             TileEntity tile = world.getTileEntity(x, y, z);
-            if (tile instanceof TileEntityInventoryConnector) {
-                IItemHandler inventory = ((TileEntityInventoryConnector) tile).getStorageInventory();
-                int total = inventory.getSlots();
-                int free = 0;
-                for (int i = 0; i < total; i++) {
-                    ItemStack stack = inventory.getStackInSlot(i);
-                    if (stack == null || stack.stackSize <= 0) free++;
-                }
+            if (tile instanceof TileEntityInventoryConnector connector) {
                 player.addChatMessage(
-                    new ChatComponentTranslation("message.tomsstorage.inventory_connector.slots", free, total));
-                if (((TileEntityInventoryConnector) tile).isCableScanLimitReached()) {
+                    new ChatComponentTranslation(
+                        "message.tomsstorage.inventory_connector.slots",
+                        connector.getIndex()
+                            .emptySlotCount(),
+                        connector.getTotalSlots()));
+                if (ModConfig.debugNetworkStats) {
+                    player.addChatMessage(
+                        new ChatComponentTranslation(
+                            "message.tomsstorage.inventory_connector.stats",
+                            connector.getNetworkStats()));
+                }
+                if (connector.isCableScanLimitReached()) {
                     player.addChatMessage(
                         new ChatComponentTranslation(
                             "message.tomsstorage.inventory_connector.cable_limit",
                             ModConfig.maxInventoryCableNodes));
                 }
-                if (((TileEntityInventoryConnector) tile).hasCableNetworkConflict()) {
+                if (connector.hasCableNetworkConflict()) {
                     player.addChatMessage(
                         new ChatComponentTranslation("message.tomsstorage.inventory_connector.cable_conflict"));
                 }

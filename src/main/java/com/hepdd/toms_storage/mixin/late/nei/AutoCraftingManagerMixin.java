@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
 import com.hepdd.toms_storage.compat.nei.NEIDebug;
 import com.hepdd.toms_storage.compat.nei.NeiCompat;
-import com.hepdd.toms_storage.inventory.CachedItemStack;
 
 import codechicken.nei.ItemStackAmount;
 import codechicken.nei.recipe.AutoCraftingManager;

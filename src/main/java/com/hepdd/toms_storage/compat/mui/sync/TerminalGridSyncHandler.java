@@ -13,14 +13,11 @@ import net.minecraft.network.PacketBuffer;
 
 import com.cleanroommc.modularui.network.NetworkUtils;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
-import com.hepdd.toms_storage.common.sort.SortDirection;
-import com.hepdd.toms_storage.common.sort.SortingTypes;
+import com.hepdd.toms_storage.common.inventory.CachedItemStack;
+import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.search.TerminalSearch;
-import com.hepdd.toms_storage.gui.SlotAction;
-import com.hepdd.toms_storage.inventory.CachedItemStack;
-import com.hepdd.toms_storage.inventory.TerminalNetworkService;
 
 public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler> {
 
@@ -44,8 +41,8 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
 
     private List<CachedItemStack> filtered = Collections.emptyList();
     private int lastRevision = Integer.MIN_VALUE;
-    private SortingTypes lastSortType;
-    private SortDirection lastSortDirection;
+    private TileEntityStorageTerminal.SortingTypes lastSortType;
+    private TileEntityStorageTerminal.SortDirection lastSortDirection;
     private String lastSearchApplied;
 
     private List<CachedItemStack> clientList = Collections.emptyList();
@@ -151,8 +148,8 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
     public void detectAndSendChanges(boolean init) {
         if (getSyncManager().isClient()) return;
         int revision = tile.getRevision();
-        SortingTypes sortType = tile.getSortType();
-        SortDirection sortDirection = tile.getSortDirection();
+        TileEntityStorageTerminal.SortingTypes sortType = tile.getSortType();
+        TileEntityStorageTerminal.SortDirection sortDirection = tile.getSortDirection();
         if (init || revision != lastRevision
             || sortType != lastSortType
             || sortDirection != lastSortDirection
@@ -259,5 +256,19 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
             case GET_QUARTER -> Math.max(1, max / 4);
             default -> max;
         };
+    }
+
+    public enum SlotAction {
+
+        PULL_OR_PUSH_STACK,
+        PULL_ONE,
+        SHIFT_PULL,
+        GET_HALF,
+        GET_QUARTER,
+        QUICK_DEPOSIT,
+        PUSH_MATCHING_FROM_PLAYER,
+        CLEAR_GRID;
+
+        public static final SlotAction[] VALUES = values();
     }
 }

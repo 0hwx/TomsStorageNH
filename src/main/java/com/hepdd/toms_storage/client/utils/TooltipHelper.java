@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.client;
+package com.hepdd.toms_storage.client.utils;
 
 import java.util.List;
 
@@ -9,8 +9,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public final class TooltipHelper {
-
-    private TooltipHelper() {}
 
     public static void addLines(List<String> tooltip, String key) {
         String text = I18n.format(key);

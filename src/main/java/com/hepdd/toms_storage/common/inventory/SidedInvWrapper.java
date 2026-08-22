@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.inventory;
+package com.hepdd.toms_storage.common.inventory;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -7,12 +7,15 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.utils.item.ItemHandlerHelper;
-import com.hepdd.toms_storage.StorageItemUtils;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 public class SidedInvWrapper implements IItemHandlerModifiable {
 
     private final IInventory inventory;
     private final ForgeDirection side;
+
+    // Cached for the lifetime of a NetworkGraph. Null means "query live" for ad-hoc wrappers.
+    private boolean[] accessibleMask;
 
     public SidedInvWrapper(IInventory inventory, ForgeDirection side) {
         this.inventory = inventory;
@@ -21,6 +24,21 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
 
     public IInventory getInventory() {
         return inventory;
+    }
+
+    /** Snapshots which slots this side can reach. Called once per graph build. */
+    public void cacheAccessibleSlots() {
+        if (!(inventory instanceof ISidedInventory)) return;
+        ISidedInventory sided = (ISidedInventory) inventory;
+        int size = inventory.getSizeInventory();
+        boolean[] mask = new boolean[size];
+        int[] accessible = sided.getAccessibleSlotsFromSide(side.ordinal());
+        if (accessible != null) {
+            for (int slot : accessible) {
+                if (slot >= 0 && slot < size) mask[slot] = true;
+            }
+        }
+        accessibleMask = mask;
     }
 
     @Override
@@ -46,7 +64,7 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
         ItemStack existing = inventory.getStackInSlot(slot);
         int limit = Math.min(inventory.getInventoryStackLimit(), stack.getMaxStackSize());
         if (existing != null) {
-            if (!StorageItemUtils.areItemStacksEqual(existing, stack, true)) return stack;
+            if (!StorageUtils.areItemStacksEqual(existing, stack, true)) return stack;
             limit -= existing.stackSize;
         }
         if (limit <= 0) return stack;
@@ -125,6 +143,8 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
     }
 
     private boolean isSlotAccessible(ISidedInventory sided, int slot) {
+        boolean[] mask = accessibleMask;
+        if (mask != null) return slot >= 0 && slot < mask.length && mask[slot];
         int[] accessible = sided.getAccessibleSlotsFromSide(side.ordinal());
         if (accessible == null) return false;
         for (int candidate : accessible) {

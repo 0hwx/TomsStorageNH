@@ -13,9 +13,9 @@ import org.lwjgl.opengl.GL11;
 import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.GuiContainerWrapper;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
-import com.hepdd.toms_storage.StorageItemUtils;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
 import codechicken.nei.LayoutManager;
 import codechicken.nei.PositionedStack;
@@ -201,7 +201,7 @@ public final class NeiCompat {
         for (ItemStack option : ingredient.items) {
             if (option == null) continue;
             for (ItemStack have : pool) {
-                if (have.stackSize > 0 && StorageItemUtils.areItemStacksEqual(have, option, true)) {
+                if (have.stackSize > 0 && StorageUtils.areItemStacksEqual(have, option, true)) {
                     have.stackSize--;
                     return option;
                 }

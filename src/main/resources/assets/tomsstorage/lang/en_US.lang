@@ -36,6 +36,7 @@ tooltip.tomsstorage.wireless_terminal.unbound=Sneak-right-click a terminal to bi
 tooltip.tomsstorage.wireless_terminal.bound=Bound to: %d, %d, %d
 tooltip.tomsstorage.wireless_terminal.dimension=Dimension: %d
 message.tomsstorage.inventory_connector.slots=Free: %d slots/Total: %d slots
+message.tomsstorage.inventory_connector.stats=Network: %s
 message.tomsstorage.inventory_connector.cable_limit=Cable scan stopped at the configured limit of %d nodes.
 message.tomsstorage.inventory_connector.cable_conflict=This cable network contains another Inventory Connector; connected hoppers are disabled.
 message.tomsstorage.inventory_connector.range_preview_opened=Showing %d-block local inventory/Trim range. A continuous path is still required; cable length uses its own node limit.

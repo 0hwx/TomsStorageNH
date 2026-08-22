@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
-import com.hepdd.toms_storage.crafting.CraftingPattern;
+import com.hepdd.toms_storage.common.crafting.CraftingPattern;
 
 import codechicken.nei.PositionedStack;
 

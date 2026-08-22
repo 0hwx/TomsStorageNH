@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.crafting;
+package com.hepdd.toms_storage.common.crafting;
 
 import java.util.HashSet;
 import java.util.List;
@@ -11,8 +11,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 
+import com.hepdd.toms_storage.common.crafting.CraftingInventorySnapshot.Extraction;
 import com.hepdd.toms_storage.compat.nei.RecipeNbtSerializer;
-import com.hepdd.toms_storage.crafting.CraftingInventorySnapshot.Extraction;
 
 public final class CraftingPlanner {
 

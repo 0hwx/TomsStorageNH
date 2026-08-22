@@ -9,23 +9,25 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.cleanroommc.modularui.utils.item.IItemHandler;
 import com.cleanroommc.modularui.utils.item.ItemHandlerHelper;
-import com.hepdd.toms_storage.StorageItemUtils;
-import com.hepdd.toms_storage.inventory.IStorageNetworkEndpoint;
-import com.hepdd.toms_storage.inventory.NetworkItemHandler;
-import com.hepdd.toms_storage.inventory.SidedInvWrapper;
-import com.hepdd.toms_storage.inventory.StorageInventoryUtils;
+import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
+import com.hepdd.toms_storage.common.inventory.NetworkItemHandler;
+import com.hepdd.toms_storage.common.inventory.SidedInvWrapper;
+import com.hepdd.toms_storage.common.inventory.network.NetworkItemIndex;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetwork;
+import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkEndpoint;
+import com.hepdd.toms_storage.utils.StorageUtils;
 
-public class TileEntityInventoryHopper extends TileEntity implements IStorageNetworkEndpoint {
+import it.unimi.dsi.fastutil.ints.IntList;
+
+public class TileEntityInventoryHopper extends TileEntity implements StorageNetworkEndpoint {
 
     private static final int TRANSFER_COOLDOWN = 10;
 
     private ItemStack filter;
     private int cooldown;
     private int roundRobinSlot;
-    private TileEntityInventoryConnector connector;
-    private IItemHandler network;
+    private StorageNetwork network;
     private ForgeDirection networkSide = ForgeDirection.UNKNOWN;
-    private long connectionEpoch = Long.MIN_VALUE;
     private boolean connectionConflict;
 
     @Override
@@ -43,14 +45,18 @@ public class TileEntityInventoryHopper extends TileEntity implements IStorageNet
             .getTileEntity(xCoord + externalSide.offsetX, yCoord + externalSide.offsetY, zCoord + externalSide.offsetZ);
         if (!(externalTile instanceof IInventory)) return;
         IInventory externalInventory = (IInventory) externalTile;
-        if (network instanceof NetworkItemHandler
-            && ((NetworkItemHandler) network).containsInventory(externalInventory)) return;
+        // Pushing into an inventory that is already on the network would just shuffle items in place.
+        if (network.containsPosition(
+            CoordinatePacker
+                .pack(xCoord + externalSide.offsetX, yCoord + externalSide.offsetY, zCoord + externalSide.offsetZ)))
+            return;
 
+        IItemHandler networkInventory = network.getStorageInventory();
         SidedInvWrapper external = new SidedInvWrapper(externalInventory, externalSide.getOpposite());
         if (isImportMode()) {
-            transferOne(external, network, false);
+            transferOne(external, networkInventory, false);
         } else if (filter != null) {
-            transferOne(network, external, true);
+            transferFiltered(networkInventory, external);
         }
     }
 
@@ -61,32 +67,35 @@ public class TileEntityInventoryHopper extends TileEntity implements IStorageNet
     }
 
     @Override
-    public void attachNetwork(TileEntityInventoryConnector newConnector, ForgeDirection side) {
-        if (worldObj == null || newConnector == null || !canConnectNetworkFrom(side)) return;
-        long epoch = worldObj.getTotalWorldTime() / 20L;
-        if (connectionEpoch != epoch) {
-            connectionEpoch = epoch;
-            connector = newConnector;
-            network = newConnector.getStorageInventory();
-            networkSide = side;
-            connectionConflict = false;
-        } else if (connector != newConnector || networkSide != side) {
+    public void attachNetwork(StorageNetwork newNetwork, ForgeDirection side) {
+        if (worldObj == null || newNetwork == null || !canConnectNetworkFrom(side)) return;
+        // Two live networks reaching the same hopper is the conflict case the cable rules forbid.
+        if (network != null && network != newNetwork && network.isNetworkValid() && network.hasEndpoint(this)) {
             connectionConflict = true;
+            return;
         }
+        network = newNetwork;
+        networkSide = side;
+        connectionConflict = false;
+    }
+
+    @Override
+    public void detachNetwork(StorageNetwork oldNetwork) {
+        if (network != oldNetwork) return;
+        clearNetwork();
     }
 
     @Override
     public void markNetworkConflict() {
-        if (worldObj == null) return;
-        connectionEpoch = worldObj.getTotalWorldTime() / 20L;
-        connector = null;
-        network = null;
+        clearNetwork();
         connectionConflict = true;
     }
 
     public void markNetworkDirty() {
-        connectionEpoch = Long.MIN_VALUE;
-        connector = null;
+        clearNetwork();
+    }
+
+    private void clearNetwork() {
         network = null;
         networkSide = ForgeDirection.UNKNOWN;
         connectionConflict = false;
@@ -121,14 +130,52 @@ public class TileEntityInventoryHopper extends TileEntity implements IStorageNet
     }
 
     private boolean hasCurrentNetwork() {
-        return worldObj != null && connector != null
-            && network != null
-            && connectionEpoch >= worldObj.getTotalWorldTime() / 20L - 1L;
+        if (network == null) return false;
+        if (!network.isNetworkValid()) {
+            clearNetwork();
+            return false;
+        }
+        return true;
     }
 
     private ForgeDirection getFacing() {
         ForgeDirection facing = ForgeDirection.getOrientation(getBlockMetadata());
         return facing == ForgeDirection.UNKNOWN ? ForgeDirection.NORTH : facing;
+    }
+
+    /** Export: the filter names exactly one item, so ask the index which slots hold it. */
+    private boolean transferFiltered(IItemHandler source, IItemHandler destination) {
+        NetworkItemIndex index = source instanceof NetworkItemHandler ? ((NetworkItemHandler) source).getIndex() : null;
+        if (index == null) return transferOne(source, destination, true);
+
+        IntList slots = index.slotsFor(filter);
+        int count = slots.size();
+        if (count == 0) return false;
+
+        for (int checked = 0; checked < count; checked++) {
+            int slot = slots.getInt(Math.floorMod(roundRobinSlot + checked, count));
+            ItemStack candidate = source.getStackInSlot(slot);
+            if (candidate == null || candidate.stackSize <= 0 || !matchesFilter(candidate, true)) continue;
+            ItemStack simulatedExtract = source.extractItem(slot, 1, true);
+            if (simulatedExtract == null || simulatedExtract.stackSize != 1) continue;
+            ItemStack simulatedRemainder = StorageUtils.insertStacked(destination, simulatedExtract, true);
+            if (simulatedRemainder != null && simulatedRemainder.stackSize > 0) continue;
+
+            ItemStack extracted = source.extractItem(slot, 1, false);
+            if (extracted == null || extracted.stackSize <= 0) continue;
+            if (extracted.stackSize != 1 || !StorageUtils.areItemStacksEqual(extracted, simulatedExtract, true)) {
+                rollbackOrDrop(source, slot, extracted);
+                return false;
+            }
+            ItemStack remainder = StorageUtils.insertStacked(destination, extracted, false);
+            if (remainder != null && remainder.stackSize > 0) rollbackOrDrop(source, slot, remainder);
+            // Indexes into the candidate list, not the global slot space - only used to spread the load.
+            roundRobinSlot = checked + 1;
+            markDirty();
+            return remainder == null || remainder.stackSize <= 0;
+        }
+        roundRobinSlot++;
+        return false;
     }
 
     private boolean transferOne(IItemHandler source, IItemHandler destination, boolean requireFilter) {
@@ -140,20 +187,20 @@ public class TileEntityInventoryHopper extends TileEntity implements IStorageNet
             if (candidate == null || candidate.stackSize <= 0 || !matchesFilter(candidate, requireFilter)) continue;
             ItemStack simulatedExtract = source.extractItem(slot, 1, true);
             if (simulatedExtract == null || simulatedExtract.stackSize != 1) continue;
-            ItemStack simulatedRemainder = StorageInventoryUtils.insertStacked(destination, simulatedExtract, true);
+            ItemStack simulatedRemainder = StorageUtils.insertStacked(destination, simulatedExtract, true);
             if (simulatedRemainder != null && simulatedRemainder.stackSize > 0) continue;
 
             ItemStack extracted = source.extractItem(slot, 1, false);
             if (extracted == null || extracted.stackSize <= 0) continue;
-            if (extracted.stackSize != 1 || !StorageItemUtils.areItemStacksEqual(extracted, simulatedExtract, true)) {
+            if (extracted.stackSize != 1 || !StorageUtils.areItemStacksEqual(extracted, simulatedExtract, true)) {
                 rollbackOrDrop(source, slot, extracted);
                 return false;
             }
-            ItemStack remainder = StorageInventoryUtils.insertStacked(destination, extracted, false);
+            ItemStack remainder = StorageUtils.insertStacked(destination, extracted, false);
             if (remainder != null && remainder.stackSize > 0) rollbackOrDrop(source, slot, remainder);
             roundRobinSlot = (slot + 1) % slots;
             markDirty();
-            if (connector != null) connector.markContentsDirty();
+            if (network != null) network.markContentsDirty();
             return remainder == null || remainder.stackSize <= 0;
         }
         roundRobinSlot = (roundRobinSlot + 1) % slots;
@@ -162,12 +209,12 @@ public class TileEntityInventoryHopper extends TileEntity implements IStorageNet
 
     private boolean matchesFilter(ItemStack stack, boolean requireFilter) {
         if (filter == null) return !requireFilter;
-        return StorageItemUtils.areItemStacksEqual(filter, stack, true);
+        return StorageUtils.areItemStacksEqual(filter, stack, true);
     }
 
     private void rollbackOrDrop(IItemHandler source, int sourceSlot, ItemStack stack) {
         ItemStack remainder = source.insertItem(sourceSlot, stack, false);
-        if (remainder != null) remainder = StorageInventoryUtils.insertStacked(source, remainder, false);
+        if (remainder != null) remainder = StorageUtils.insertStacked(source, remainder, false);
         if (remainder == null || remainder.stackSize <= 0) return;
         EntityItem dropped = new EntityItem(worldObj, xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D, remainder.copy());
         worldObj.spawnEntityInWorld(dropped);

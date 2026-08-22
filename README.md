@@ -15,6 +15,8 @@ The mod is intended for early-game inventory management and simple automation. I
 
 - NotEnoughItems, using the GTNH line or a compatible version
 - UniMixins
+- GTNHLib
+- ModularUI2
 
 The NEI integration is provided by ModularUI2's NEI support plus one client-side mixin. A compatible NEI build must provide `AutoCraftingManager`.
 
@@ -29,6 +31,7 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 - Storage Terminals provide centralized insertion, extraction, sorting and searching.
 - Crafting Terminals add a crafting grid with NEI recipe transfer and auto-crafting integration.
 - Wireless Terminals can be bound to a terminal and used within the configured range and dimension.
+- Placing or breaking this mod's own blocks updates the network immediately. A container placed or broken deeper in a chain of containers is picked up by a periodic rescan instead, so it can take a few seconds to appear (see `networkTopologyRescanInterval`). Items moved in or out by other mods are noticed by a continuous background sweep (see `networkSweepSlotsPerTick`).
 
 ### Search
 
@@ -58,6 +61,14 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 - Sneak-right-click an Inventory Connector with an empty hand to toggle a colored spherical range preview.
 - The sphere represents the local inventory/Trim scan radius. Inventories still require a continuous connected path.
 - Cable networks use their own node limit and are not restricted by this sphere.
+
+## Configuration
+
+Storage network tuning, in `config/tomsstorage.cfg`:
+
+- `networkTopologyRescanInterval` (default 100 ticks) — how often an Inventory Connector re-walks its network to find blocks placed or removed by other mods. Blocks from this mod are picked up immediately, so this only bounds how long a foreign chest takes to appear.
+- `networkSweepSlotsPerTick` (default 512) — how many network slots each world re-reads per tick to notice items moved by other mods. Higher reacts faster to outside changes, lower costs less.
+- `debugNetworkStats` (default false) — adds a statistics line (members, slots, distinct items, last rebuild time) when right-clicking an Inventory Connector.
 
 ## Quick Start
 

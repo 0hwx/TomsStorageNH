@@ -9,7 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 
 import cpw.mods.fml.relauncher.Side;

@@ -15,7 +15,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.hepdd.toms_storage.client.TooltipHelper;
+import com.hepdd.toms_storage.client.utils.TooltipHelper;
+import com.hepdd.toms_storage.common.inventory.network.StorageNetworkRegistry;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.TerminalGuiFactory;
 
@@ -110,10 +111,27 @@ public class BlockStorageTerminal extends BlockContainer {
     }
 
     @Override
+    public void onBlockAdded(World world, int x, int y, int z) {
+        super.onBlockAdded(world, x, y, z);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
+    @Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+        super.breakBlock(world, x, y, z, block, meta);
+    }
+
+    @Override
+    public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
+        super.onNeighborBlockChange(world, x, y, z, neighbor);
+        StorageNetworkRegistry.onBlockChanged(world, x, y, z);
+    }
+
+    @Override
     public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX,
         float hitY, float hitZ) {
         if (!world.isRemote) {
-            // TileEntityCraftingTerminal extends TileEntityStorageTerminal, so one branch covers both.
             if (world.getTileEntity(x, y, z) instanceof TileEntityStorageTerminal terminal) {
                 TerminalGuiFactory.INSTANCE.open(player, terminal);
             }

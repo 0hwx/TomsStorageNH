@@ -1,6 +1,6 @@
-package com.hepdd.toms_storage;
+package com.hepdd.toms_storage.network;
 
-import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
+import com.hepdd.toms_storage.TomsStorage;
 
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;

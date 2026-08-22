@@ -30,6 +30,7 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 - Inventory Trim extends the connected path between inventories.
 - Storage Terminals provide centralized insertion, extraction, sorting and searching.
 - Crafting Terminals add a crafting grid with NEI recipe transfer and auto-crafting integration. A toggle beside the crafting output chooses whether results go to your inventory or into the storage network.
+- Crafting is paid for out of the network, like AE2: the 3x3 is the pattern you arrange, not the stock being eaten, so it stays as you left it and you can keep crafting well past the one stack that fits in it. If the network runs out of an ingredient the grid itself is used instead, and depletes normally. Shift-clicking the result stops at a full stack by default; see `shiftCraftLimit`. Whatever is left in the grid is returned to the network when the terminal is closed.
 - Every terminal shows two bars in its header: slots used out of the network total, and items stored out of the network's capacity. Capacity is summed from each inventory's own slot limit, so a drawer or barrel counts for what it can really hold. Hover either bar for the exact numbers.
 - Wireless Terminals can be bound to a terminal and used within the configured range and dimension.
 - Placing or breaking this mod's own blocks updates the network immediately. A container placed or broken deeper in a chain of containers is picked up by a periodic rescan instead, so it can take a few seconds to appear (see `networkTopologyRescanInterval`). Items moved in or out by other mods are noticed by a continuous background sweep (see `networkSweepSlotsPerTick`).
@@ -70,6 +71,7 @@ Storage network tuning, in `config/tomsstorage.cfg`:
 - `networkTopologyRescanInterval` (default 100 ticks) — how often an Inventory Connector re-walks its network to find blocks placed or removed by other mods. Blocks from this mod are picked up immediately, so this only bounds how long a foreign chest takes to appear.
 - `networkSweepSlotsPerTick` (default 512) — how many network slots each world re-reads per tick to notice items moved by other mods. Higher reacts faster to outside changes, lower costs less.
 - `debugNetworkStats` (default false) — adds a statistics line (members, slots, distinct items, last rebuild time) when right-clicking an Inventory Connector.
+- `shiftCraftLimit` (default `ONE_STACK`) — how much one shift-click on the crafting result produces. `ONE_STACK` stops at a full stack of the result, the same boundary AE2 uses, so a recipe yielding 3 at a time stops at 63 rather than overshooting. `ALL_AVAILABLE` keeps crafting until the ingredients run out. Applies to both craft directions; a plain click is always a single craft and is never limited.
 
 ## Quick Start
 

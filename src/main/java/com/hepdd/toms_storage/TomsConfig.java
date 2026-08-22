@@ -4,6 +4,7 @@ import static com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.Termi
 
 import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+import com.hepdd.toms_storage.common.crafting.ShiftCraftLimit;
 
 @Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "general")
 public class TomsConfig {
@@ -44,6 +45,11 @@ public class TomsConfig {
     @Config.Comment("Show storage network statistics when right-clicking an Inventory Connector.")
     @Config.DefaultBoolean(false)
     public static boolean debugNetworkStats;
+
+    @Config.Comment({ "How far one shift-click on the crafting result may drain the storage network.",
+        "ONE_STACK stops after a stack of the result; ALL_AVAILABLE crafts until the ingredients run out." })
+    @Config.DefaultEnum("ONE_STACK")
+    public static ShiftCraftLimit shiftCraftLimit;
 
     public static void register() {
         ConfigurationManager.registerConfig(TomsConfig.class);

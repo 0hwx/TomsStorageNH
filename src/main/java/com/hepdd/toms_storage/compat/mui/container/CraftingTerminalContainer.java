@@ -18,6 +18,7 @@ import com.cleanroommc.modularui.widgets.slot.ModularCraftingSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.hepdd.toms_storage.common.crafting.AutoCraftRequest;
 import com.hepdd.toms_storage.common.crafting.SingleAutoCraftExecutor;
+import com.hepdd.toms_storage.common.crafting.TerminalCraftSession;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
@@ -27,7 +28,6 @@ import com.hepdd.toms_storage.utils.StorageUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.GuiOverlayButton;
 import codechicken.nei.recipe.IRecipeHandler;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Optional;
 
 @Optional.Interface(iface = "com.cleanroommc.modularui.integration.nei.INEIRecipeTransfer", modid = "NotEnoughItems")
@@ -41,16 +41,22 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
     private final InventoryCraftingWrapper inventoryCrafting;
     private final AutoCraftPreviewInventory autoCraftPreview = new AutoCraftPreviewInventory();
     private ModularCraftingSlot craftingSlot;
+    private final TerminalCraftSession craftSession;
 
     public CraftingTerminalContainer(TileEntityCraftingTerminal terminal, IItemHandlerModifiable craftingInventory) {
         super(terminal);
         this.terminal = terminal;
         this.craftingInventory = craftingInventory;
         this.inventoryCrafting = new InventoryCraftingWrapper(this, 3, 3, craftingInventory, 0);
+        this.craftSession = new TerminalCraftSession(terminal);
     }
 
     public IItemHandlerModifiable getCraftingInventory() {
         return craftingInventory;
+    }
+
+    public TerminalCraftSession getCraftSession() {
+        return craftSession;
     }
 
     public AutoCraftPreviewInventory getAutoCraftPreview() {
@@ -124,23 +130,35 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
 
     @Override
     public void onCraftMatrixChanged(IInventory inventory) {
-        if (!getGuiData().isClient()) {
-            this.craftingSlot.updateResult(
-                CraftingManager.getInstance()
+        if (getGuiData().isClient()) return;
+        // Blanking the result is what stops MUI's quick-move loop: it only repeats while the result slot
+        // still holds something that stacks with what it just moved.
+        this.craftingSlot.updateResult(
+            craftSession.isSpent() ? null
+                : CraftingManager.getInstance()
                     .findMatchingRecipe(this.inventoryCrafting, getPlayer().worldObj));
-        }
     }
 
     @Override
     public ItemStack slotClick(int slotId, int mouseButton, int mode, EntityPlayer player) {
+        boolean onResult = slotId >= 0 && slotId < this.inventorySlots.size()
+            && getModularSlot(slotId) instanceof ModularCraftingSlot;
+        if (!onResult) return super.slotClick(slotId, mouseButton, mode, player);
+
         // In craft-to-storage mode, clicking the result crafts straight into the network (shift = craft all).
-        if (terminal.isCraftToStorage() && slotId >= 0
-            && slotId < this.inventorySlots.size()
-            && getModularSlot(slotId) instanceof ModularCraftingSlot) {
+        if (terminal.isCraftToStorage()) {
             if (!player.worldObj.isRemote) craftIntoStorage(player, mode == 1);
             return null;
         }
-        return super.slotClick(slotId, mouseButton, mode, player);
+        // Craft-to-inventory runs MUI's own quick-move loop, so the budget has to span the whole click.
+        craftSession.begin(mode == 1);
+        try {
+            return super.slotClick(slotId, mouseButton, mode, player);
+        } finally {
+            craftSession.end();
+            // The burst may have blanked the result to break the loop; restore it now the click is over.
+            if (!player.worldObj.isRemote) onCraftMatrixChanged(inventoryCrafting);
+        }
     }
 
     @Override
@@ -205,43 +223,30 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
         return result;
     }
 
+    /**
+     * We drive this loop ourselves, so the craft count is settled up front the way AE2 does it rather than
+     * re-tested after every craft. The guard still caps an unbounded craft-all.
+     */
     private void craftIntoStorage(EntityPlayer player, boolean craftAll) {
+        craftSession.begin(craftAll);
+        int planned = craftAll ? Math.min(
+            CRAFT_ALL_GUARD,
+            craftSession.plannedCrafts(
+                CraftingManager.getInstance()
+                    .findMatchingRecipe(inventoryCrafting, player.worldObj)))
+            : 1;
+
         boolean crafted = false;
-        int guard = 0;
-        while (guard++ < CRAFT_ALL_GUARD) {
-            ItemStack result = CraftingManager.getInstance()
-                .findMatchingRecipe(inventoryCrafting, player.worldObj);
+        for (int i = 0; i < planned; i++) {
+            ItemStack result = craftSession.craftOnce(inventoryCrafting, player);
             if (result == null) break;
-            FMLCommonHandler.instance()
-                .firePlayerCraftingEvent(player, result.copy(), inventoryCrafting);
-            TerminalNetworkService.pushOrDrop(terminal, result.copy());
-            consumeIngredients();
+            TerminalNetworkService.pushOrDrop(terminal, result);
             crafted = true;
-            if (!craftAll) break;
         }
+        craftSession.end();
         if (crafted) {
             onCraftMatrixChanged(inventoryCrafting);
             detectAndSendChanges();
-        }
-    }
-
-    private void consumeIngredients() {
-        for (int i = 0; i < 9; i++) {
-            ItemStack ingredient = inventoryCrafting.getStackInSlot(i);
-            if (ingredient == null || ingredient.getItem() == null) continue;
-            inventoryCrafting.decrStackSize(i, 1);
-            if (ingredient.getItem()
-                .hasContainerItem(ingredient)) {
-                ItemStack container = ingredient.getItem()
-                    .getContainerItem(ingredient);
-                if (container != null) {
-                    if (inventoryCrafting.getStackInSlot(i) == null) {
-                        inventoryCrafting.setInventorySlotContents(i, container);
-                    } else {
-                        TerminalNetworkService.pushOrDrop(terminal, container);
-                    }
-                }
-            }
         }
     }
 }

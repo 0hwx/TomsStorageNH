@@ -41,6 +41,25 @@ public final class CraftingRemainderHandler {
         return container.copy();
     }
 
+    /**
+     * True when using this ingredient destroys what it would otherwise give back, which is the case
+     * {@link #getRemainder}
+     */
+    public static boolean containerBreaks(ItemStack ingredient) {
+        if (ingredient == null) return false;
+        if (isGTTool(ingredient)) {
+            ItemStack tool = ingredient.copy();
+            incrementGTDamage(tool, 1);
+            return getGTDurability(tool) <= 0;
+        }
+        if (!ingredient.getItem()
+            .hasContainerItem(ingredient)) return false;
+        ItemStack container = ingredient.getItem()
+            .getContainerItem(ingredient);
+        return container != null && container.isItemStackDamageable()
+            && container.getItemDamage() > container.getMaxDamage();
+    }
+
     public static boolean isGTTool(ItemStack stack) {
         if (stack == null || !stack.hasTagCompound()) return false;
         NBTTagCompound tag = stack.getTagCompound();

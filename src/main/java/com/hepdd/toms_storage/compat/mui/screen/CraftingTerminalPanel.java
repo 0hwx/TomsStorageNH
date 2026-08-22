@@ -11,7 +11,6 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
-import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotTerminalCraftingMatrix;
 import com.hepdd.toms_storage.compat.mui.slot.TerminalCraftingSlot;
@@ -59,7 +58,7 @@ public class CraftingTerminalPanel extends StorageTerminalPanel {
             craftMode.setBoolValue(!craftMode.getBoolValue(), true, true);
             return true;
         })
-            .background(new DynamicDrawable(() -> buttonTexture(194 + (craftMode.getBoolValue() ? 16 : 0 ) , 46, 16, 16)))
+            .background(new DynamicDrawable(() -> buttonTexture(194 + (craftMode.getBoolValue() ? 16 : 0), 46, 16, 16)))
             .tooltipDynamic(
                 t -> t.addLine(IKey.lang("tooltip.tomsstorage.craft_to_storage." + (craftMode.getBoolValue() ? 1 : 0))))
             .tooltipAutoUpdate(true)

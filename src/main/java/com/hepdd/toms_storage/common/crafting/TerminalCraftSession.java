@@ -30,7 +30,6 @@ public final class TerminalCraftSession {
         this.terminal = terminal;
     }
 
-
     public void begin(boolean shiftClick) {
         crafted = 0;
         perCraft = -1;
@@ -49,6 +48,7 @@ public final class TerminalCraftSession {
      * How many crafts this click may run, decided before any of them happen - AE2's
      * {@code floor(maxStackSize / howManyPerCraft)}. A recipe yielding 3 gets 21 crafts, so it stops at 63
      * rather than overshooting a stack.
+     * 
      * @param output what one craft produces, or null when the grid holds no recipe
      */
     public int plannedCrafts(ItemStack output) {

@@ -2,11 +2,15 @@ package com.hepdd.toms_storage.common;
 
 import net.minecraftforge.common.MinecraftForge;
 
+import com.cleanroommc.modularui.screen.ModularContainer;
+import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.hepdd.toms_storage.Tags;
 import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.inventory.network.StorageNetworkEvents;
+import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.mui.TerminalGuiFactory;
+import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.network.TomsNetwork;
 import com.hepdd.toms_storage.registry.ModBlocks;
 import com.hepdd.toms_storage.registry.ModItems;
@@ -39,6 +43,15 @@ public class CommonProxy {
             .bus()
             .register(networkEvents);
         MinecraftForge.EVENT_BUS.register(networkEvents);
+    }
+
+    /**
+     * Built through the proxy so the class carrying NEI's recipe transfer - which is client-only, since
+     * MUI's INEIRecipeTransfer is parameterised on GuiContainer - is never named in code the server runs.
+     */
+    public ModularContainer craftingTerminalContainer(TileEntityCraftingTerminal terminal,
+        IItemHandlerModifiable craftingInventory) {
+        return new CraftingTerminalContainer(terminal, craftingInventory);
     }
 
     public void postInit(FMLPostInitializationEvent event) {}

@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.cleanroommc.modularui.screen.ModularContainer;
+import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.gtnewhorizon.gtnhlib.blockstate.core.BlockProperty;
 import com.gtnewhorizon.gtnhlib.blockstate.properties.DirectionBlockProperty;
 import com.gtnewhorizon.gtnhlib.blockstate.registry.BlockPropertyRegistry;
@@ -13,6 +15,8 @@ import com.hepdd.toms_storage.client.model.CableStateProperties;
 import com.hepdd.toms_storage.client.model.TerminalStateProperties;
 import com.hepdd.toms_storage.common.CommonProxy;
 import com.hepdd.toms_storage.common.block.BlockStorageTerminal.MountPos;
+import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
+import com.hepdd.toms_storage.compat.mui.container.NeiCraftingTerminalContainer;
 import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -28,6 +32,12 @@ public class ClientProxy extends CommonProxy {
             .register(ConnectorRangePreview.INSTANCE);
         super.preInit(event);
         registerJsonModels();
+    }
+
+    @Override
+    public ModularContainer craftingTerminalContainer(TileEntityCraftingTerminal terminal,
+        IItemHandlerModifiable craftingInventory) {
+        return new NeiCraftingTerminalContainer(terminal, craftingInventory);
     }
 
     private void registerJsonModels() {

@@ -41,7 +41,7 @@ dependencies {
     runtimeOnlyNonPublishable("com.falsepattern:falsepatternlib-mc1.7.10:1.12.0:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.31:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:WAILAPlugins:0.7.2:dev")
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.8:dev")
+//    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.8:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:ironchest:6.1.13:dev")
     runtimeOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.6.40-GTNH:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:TinkersConstruct:1.14.102-GTNH:dev")

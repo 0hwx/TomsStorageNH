@@ -1,8 +1,5 @@
 package com.hepdd.toms_storage.compat.mui.container;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
@@ -10,8 +7,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.cleanroommc.modularui.integration.nei.INEIRecipeTransfer;
-import com.cleanroommc.modularui.screen.GuiContainerWrapper;
 import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.widgets.slot.InventoryCraftingWrapper;
 import com.cleanroommc.modularui.widgets.slot.ModularCraftingSlot;
@@ -22,17 +17,9 @@ import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftRequest;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
-import com.hepdd.toms_storage.compat.nei.NeiCompat;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
-import codechicken.nei.PositionedStack;
-import codechicken.nei.recipe.GuiOverlayButton;
-import codechicken.nei.recipe.IRecipeHandler;
-import cpw.mods.fml.common.Optional;
-
-@Optional.Interface(iface = "com.cleanroommc.modularui.integration.nei.INEIRecipeTransfer", modid = "NotEnoughItems")
-public class CraftingTerminalContainer extends StorageTerminalContainer
-    implements INEIRecipeTransfer<GuiContainerWrapper> {
+public class CraftingTerminalContainer extends StorageTerminalContainer {
 
     private static final int CRAFT_ALL_GUARD = 1024;
 
@@ -71,43 +58,6 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
         if (output == null || output.stackSize <= 0) return;
         AutoCraftExecutor.execute(request, serverPlayer, terminal);
         serverPlayer.inventory.markDirty();
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public String[] getIdents() {
-        return NeiCompat.getIdents();
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public int transferRecipe(GuiContainerWrapper gui, IRecipeHandler recipe, int recipeIndex, int multiplier) {
-        return NeiCompat.transferRecipe(this, gui, recipe, recipeIndex, multiplier);
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public List<GuiOverlayButton.ItemOverlayState> presenceOverlay(GuiContainerWrapper gui, IRecipeHandler recipe,
-        int recipeIndex) {
-        return NeiCompat.presenceOverlay(this, gui, recipe, recipeIndex);
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public ArrayList<PositionedStack> positionStacks(GuiContainerWrapper gui, ArrayList<PositionedStack> stacks) {
-        return NeiCompat.positionStacks(this, gui, stacks);
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public boolean canCraft(GuiContainerWrapper gui, IRecipeHandler recipe, int recipeIndex) {
-        return NeiCompat.canCraft(this, gui, recipe, recipeIndex);
-    }
-
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public boolean craft(GuiContainerWrapper gui, IRecipeHandler recipe, int recipeIndex, int multiplier) {
-        return NeiCompat.craft(this, gui, recipe, recipeIndex, multiplier);
     }
 
     @Override

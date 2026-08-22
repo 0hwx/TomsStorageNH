@@ -10,8 +10,8 @@ import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
+import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
-import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.slot.ItemSlotTerminalCraftingMatrix;
 import com.hepdd.toms_storage.compat.mui.slot.TerminalCraftingSlot;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
@@ -30,7 +30,7 @@ public class CraftingTerminalPanel extends StorageTerminalPanel {
 
     @Override
     protected ModularContainer createContainer() {
-        return new CraftingTerminalContainer(craftingTile, craftingInventory);
+        return TomsStorage.proxy.craftingTerminalContainer(craftingTile, craftingInventory);
     }
 
     private void addCraftingWidgets(PanelSyncManager sync) {

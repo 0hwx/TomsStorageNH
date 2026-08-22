@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 import com.hepdd.toms_storage.common.crafting.CraftingStackMatcher;
+import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
@@ -49,7 +50,7 @@ public final class AutoCraftPreviewInventory {
                 if (candidates == null || candidates.length == 0) continue;
                 ItemStack consumed = consumeCandidate(preview, previewPlayer, candidates);
                 if (consumed == null) {
-                    NEIDebug.log(
+                    AutoCraftDebug.log(
                         "preview failed request=" + requestId
                             + " slot="
                             + slot
@@ -159,19 +160,19 @@ public final class AutoCraftPreviewInventory {
 
     private static String describeCandidates(ItemStack[] candidates) {
         List<String> values = new ArrayList<>();
-        for (ItemStack stack : candidates) values.add(NEIDebug.stack(stack));
+        for (ItemStack stack : candidates) values.add(AutoCraftDebug.stack(stack));
         return values.toString();
     }
 
     private static String describeStored(List<CachedItemStack> stacks) {
         List<String> values = new ArrayList<>();
-        for (CachedItemStack stack : stacks) values.add(NEIDebug.stack(stack.actualStack()));
+        for (CachedItemStack stack : stacks) values.add(AutoCraftDebug.stack(stack.actualStack()));
         return values.toString();
     }
 
     private static String describeItems(List<ItemStack> stacks) {
         List<String> values = new ArrayList<>();
-        for (ItemStack stack : stacks) values.add(NEIDebug.stack(stack));
+        for (ItemStack stack : stacks) values.add(AutoCraftDebug.stack(stack));
         return values.toString();
     }
 

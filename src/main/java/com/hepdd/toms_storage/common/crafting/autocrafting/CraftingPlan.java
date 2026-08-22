@@ -1,4 +1,4 @@
-package com.hepdd.toms_storage.common.crafting;
+package com.hepdd.toms_storage.common.crafting.autocrafting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,14 +6,16 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.common.crafting.CraftingInventorySnapshot.Extraction;
-
+/**
+ * A finished plan: the operations to run, in order. Sub-crafts come before whatever consumes them, so an
+ * executor can walk the list once.
+ */
 public final class CraftingPlan {
 
     private final List<CraftOperation> operations = new ArrayList<>();
 
-    public void addOperation(Extraction[] extractions, ItemStack output, boolean finalOutput) {
-        operations.add(new CraftOperation(extractions, output, finalOutput));
+    public void addOperation(Extraction[] extractions, ItemStack output, int times, boolean finalOutput) {
+        operations.add(new CraftOperation(extractions, output, times, finalOutput));
     }
 
     public boolean isEmpty() {
@@ -24,15 +26,21 @@ public final class CraftingPlan {
         return Collections.unmodifiableList(operations);
     }
 
+    /**
+     * One recipe run {@code times} over. The extractions already carry the multiplied amounts, so a batch
+     * costs the executor the same work as a single craft.
+     */
     public static final class CraftOperation {
 
         private final Extraction[] extractions;
         private final ItemStack output;
+        private final int times;
         private final boolean finalOutput;
 
-        private CraftOperation(Extraction[] extractions, ItemStack output, boolean finalOutput) {
+        private CraftOperation(Extraction[] extractions, ItemStack output, int times, boolean finalOutput) {
             this.extractions = extractions;
             this.output = output == null ? null : output.copy();
+            this.times = Math.max(1, times);
             this.finalOutput = finalOutput;
         }
 
@@ -40,13 +48,17 @@ public final class CraftingPlan {
             return extractions;
         }
 
+        /** What one run produces. Multiply by {@link #getTimes()} for the operation's whole yield. */
         public ItemStack getOutput() {
             return output == null ? null : output.copy();
+        }
+
+        public int getTimes() {
+            return times;
         }
 
         public boolean isFinalOutput() {
             return finalOutput;
         }
-
     }
 }

@@ -10,14 +10,20 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.lwjgl.opengl.GL11;
 
-import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.GuiContainerWrapper;
+import com.cleanroommc.modularui.utils.GlStateManager;
+import com.cleanroommc.modularui.utils.Platform;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
+import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
+import com.hepdd.toms_storage.common.crafting.autocrafting.CraftingPattern;
+import com.hepdd.toms_storage.common.crafting.autocrafting.RecipeNbtSerializer;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
+import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.LayoutManager;
+import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.recipe.GuiOverlayButton;
@@ -34,8 +40,6 @@ public final class NeiCompat {
     private static final ItemStack[] GHOSTS = new ItemStack[9];
 
     private static int nextAutoCraftRequestId;
-
-    private NeiCompat() {}
 
     public static String[] getIdents() {
         return new String[] { "crafting" };
@@ -106,18 +110,19 @@ public final class NeiCompat {
         return stacks;
     }
 
-    // Gated on NEI's own overlay state so the lifecycle matches it: LayoutManager clears overlayRenderer on GUI
-    // (re)load and on the clear-overlay hotkey.
     public static void drawGhost(int index) {
         if (index < 0 || index >= GHOSTS.length) return;
         ItemStack ghost = GHOSTS[index];
         if (ghost == null || LayoutManager.overlayRenderer == null) return;
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        Platform.setupDrawItem();
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(770, 1);
         GuiContainerManager.drawItem(1, 1, ghost);
+        GlStateManager.disableRescaleNormal();
+        Platform.endDrawItem();
+        NEIClientUtils.gl2DRenderContext(() -> GuiDraw.drawRect(1, 1, 16, 16, 0x66555555));
         GL11.glPopAttrib();
-        GuiDraw.drawRect(1, 1, 16, 16, 0x66555555);
     }
 
     public static boolean canCraft(CraftingTerminalContainer container, GuiContainerWrapper gui, IRecipeHandler recipe,
@@ -137,7 +142,7 @@ public final class NeiCompat {
         if (output == null) return false;
 
         int count = Math.max(1, multiplier);
-        ItemStack[][] mapped = new ItemStack[RecipeNbtSerializer.GRID_SIZE][];
+        ItemStack[][] mapped = new ItemStack[CraftingPattern.GRID_SIZE][];
         for (int i = 0; i < mapped.length; i++) mapped[i] = new ItemStack[0];
         for (PositionedStack ingredient : recipe.getIngredientStacks(recipeIndex)) {
             int index = matrixIndex(ingredient);
@@ -160,7 +165,7 @@ public final class NeiCompat {
                 RecipeNbtSerializer.readIngredients(recipeTag),
                 output,
                 count)) {
-            NEIDebug.log("craft abort: preview simulation failed");
+            AutoCraftDebug.log("craft abort: preview simulation failed");
             return false;
         }
         container.getAutoCraftPreview()
@@ -181,7 +186,7 @@ public final class NeiCompat {
             }
             if (result instanceof ItemStack stack) return stack.copy();
         } catch (ReflectiveOperationException e) {
-            NEIDebug.log(
+            AutoCraftDebug.log(
                 "craft output lookup failed handler=" + recipe.getClass()
                     .getName() + " error=" + e);
         }

@@ -20,7 +20,7 @@ public class ItemSlotTerminalCraftingMatrix extends ItemSlot {
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        super.draw(context, widgetTheme);
         if (NEI_LOADED && getSlot().getStack() == null) NeiCompat.drawGhost(index);
+        super.draw(context, widgetTheme);
     }
 }

@@ -1,11 +1,14 @@
-package com.hepdd.toms_storage.compat.nei;
+package com.hepdd.toms_storage.common.crafting.autocrafting;
 
 import net.minecraft.item.ItemStack;
 
 import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 
-public final class NEIDebug {
+/**
+ * Tracing for the auto-craft path, behind {@code debugNeiAutocrafting}
+ */
+public final class AutoCraftDebug {
 
     public static void log(String message) {
         if (TomsConfig.debugNeiAutocrafting) TomsStorage.LOG.info("[NEI autocraft] " + message);

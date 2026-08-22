@@ -16,9 +16,9 @@ import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.widgets.slot.InventoryCraftingWrapper;
 import com.cleanroommc.modularui.widgets.slot.ModularCraftingSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
-import com.hepdd.toms_storage.common.crafting.AutoCraftRequest;
-import com.hepdd.toms_storage.common.crafting.SingleAutoCraftExecutor;
 import com.hepdd.toms_storage.common.crafting.TerminalCraftSession;
+import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftExecutor;
+import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftRequest;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
@@ -66,10 +66,10 @@ public class CraftingTerminalContainer extends StorageTerminalContainer
     // Server side, driven by TerminalGridSyncHandler's ID_AUTOCRAFT.
     public void runAutoCraft(NBTTagCompound recipeTag) {
         if (!(getSyncManager().getPlayer() instanceof EntityPlayerMP serverPlayer)) return;
-        AutoCraftRequest request = new AutoCraftRequest(recipeTag, true, true);
+        AutoCraftRequest request = AutoCraftRequest.fromNbt(recipeTag, true, true);
         ItemStack output = request.getOutput();
         if (output == null || output.stackSize <= 0) return;
-        SingleAutoCraftExecutor.execute(request, serverPlayer, terminal);
+        AutoCraftExecutor.execute(request, serverPlayer, terminal);
         serverPlayer.inventory.markDirty();
     }
 

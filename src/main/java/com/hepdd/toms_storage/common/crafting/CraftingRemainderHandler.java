@@ -3,18 +3,7 @@ package com.hepdd.toms_storage.common.crafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
-
 public final class CraftingRemainderHandler {
-
-    private CraftingRemainderHandler() {}
-
-    public static void handleRemainder(TileEntityStorageTerminal terminal, ItemStack ingredient) {
-        if (ingredient == null || terminal == null) return;
-
-        ItemStack remainder = getRemainder(ingredient);
-        if (remainder != null) terminal.pushOrDrop(remainder);
-    }
 
     public static ItemStack getRemainder(ItemStack ingredient) {
         if (ingredient == null) return null;

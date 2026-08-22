@@ -3,7 +3,7 @@ package com.hepdd.toms_storage.crafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 
 public final class CraftingRemainderHandler {
 

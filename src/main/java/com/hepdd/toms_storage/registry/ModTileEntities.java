@@ -1,16 +1,17 @@
 package com.hepdd.toms_storage.registry;
 
-import com.hepdd.toms_storage.TomsStorage;
-import com.hepdd.toms_storage.tile.TileEntityCraftingTerminal;
-import com.hepdd.toms_storage.tile.TileEntityInventoryConnector;
-import com.hepdd.toms_storage.tile.TileEntityInventoryHopper;
-import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
 import net.minecraft.tileentity.TileEntity;
 
+import com.hepdd.toms_storage.TomsStorage;
+import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
+import com.hepdd.toms_storage.common.tile.TileEntityInventoryConnector;
+import com.hepdd.toms_storage.common.tile.TileEntityInventoryHopper;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public enum ModTileEntities {
+
     // spotless:off
     // make sure to leave a trailing comma
     STORAGE_TERMINAL(TileEntityStorageTerminal.class                                                , "storage_terminal"),

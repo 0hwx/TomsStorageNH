@@ -11,8 +11,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 
+import com.hepdd.toms_storage.compat.nei.RecipeNbtSerializer;
 import com.hepdd.toms_storage.crafting.CraftingInventorySnapshot.Extraction;
-import com.hepdd.toms_storage.nei.RecipeNbtSerializer;
 
 public final class CraftingPlanner {
 

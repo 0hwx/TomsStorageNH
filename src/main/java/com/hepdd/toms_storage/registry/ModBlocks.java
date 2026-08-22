@@ -1,21 +1,23 @@
 package com.hepdd.toms_storage.registry;
 
-import com.hepdd.toms_storage.TomsStorage;
-import com.hepdd.toms_storage.block.BlockCraftingTerminal;
-import com.hepdd.toms_storage.block.BlockInventoryCable;
-import com.hepdd.toms_storage.block.BlockInventoryConnector;
-import com.hepdd.toms_storage.block.BlockInventoryHopper;
-import com.hepdd.toms_storage.block.BlockStorageTerminal;
-import com.hepdd.toms_storage.block.BlockTrim;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
+import com.hepdd.toms_storage.TomsStorage;
+import com.hepdd.toms_storage.common.block.BlockCraftingTerminal;
+import com.hepdd.toms_storage.common.block.BlockInventoryCable;
+import com.hepdd.toms_storage.common.block.BlockInventoryConnector;
+import com.hepdd.toms_storage.common.block.BlockInventoryHopper;
+import com.hepdd.toms_storage.common.block.BlockStorageTerminal;
+import com.hepdd.toms_storage.common.block.BlockTrim;
+
 import cpw.mods.fml.common.registry.GameRegistry;
 
 // Credit to Et Futurum (Requiem)
 public enum ModBlocks {
+
     // spotless:off
     INVENTORY_CONNECTOR(true , new BlockInventoryConnector(), BlockInventoryConnector.ItemBlockInventoryConnector.class, "inventory_connector"),
     CRAFTING_TERMINAL(true, new BlockCraftingTerminal(), BlockCraftingTerminal.ItemBlockCraftingTerminal.class, "crafting_terminal"),

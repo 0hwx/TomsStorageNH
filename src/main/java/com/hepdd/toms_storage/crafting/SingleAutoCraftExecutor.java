@@ -7,29 +7,26 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
 import com.hepdd.toms_storage.StorageItemUtils;
-import com.hepdd.toms_storage.StoredItemStack;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.compat.nei.NEIDebug;
+import com.hepdd.toms_storage.compat.nei.RecipeNbtSerializer;
 import com.hepdd.toms_storage.crafting.CraftingInventorySnapshot.Extraction;
 import com.hepdd.toms_storage.crafting.CraftingPlan.CraftOperation;
-import com.hepdd.toms_storage.gui.ContainerCraftingTerminal;
-import com.hepdd.toms_storage.nei.NEIDebug;
-import com.hepdd.toms_storage.nei.RecipeNbtSerializer;
-import com.hepdd.toms_storage.network.PacketAutoCraftRequest;
-import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.inventory.TerminalNetworkService;
 
 public final class SingleAutoCraftExecutor {
 
     private SingleAutoCraftExecutor() {}
 
-    public static CraftResult execute(PacketAutoCraftRequest request, EntityPlayerMP player,
-        ContainerCraftingTerminal container) {
-        TileEntityStorageTerminal terminal = container.getTerminal();
-        CraftingPattern rootPattern = RecipeNbtSerializer.readPattern(request.getRecipeTag());
-        List<CraftingPattern> patterns = RecipeNbtSerializer.readPatterns(request.getRecipeTag());
+    public static CraftResult execute(AutoCraftRequest request, EntityPlayerMP player,
+        TileEntityStorageTerminal terminal) {
+        CraftingPattern rootPattern = RecipeNbtSerializer.readPattern(request.recipeTag());
+        List<CraftingPattern> patterns = RecipeNbtSerializer.readPatterns(request.recipeTag());
         CraftingInventorySnapshot snapshot = new CraftingInventorySnapshot(
             terminal,
             player,
-            request.isUsePlayerInventory());
-        CraftingPlanner planner = new CraftingPlanner(player, snapshot, patterns, request.isAllowSubCrafting());
+            request.usePlayerInventory());
+        CraftingPlanner planner = new CraftingPlanner(player, snapshot, patterns, request.allowSubCrafting());
         CraftingPlanner.CraftResult result = planner.plan(rootPattern, request.getCount());
         if (!result.isSuccess()) return CraftResult.failure(result.getReason());
 
@@ -49,9 +46,8 @@ public final class SingleAutoCraftExecutor {
                     actual = player.inventory
                         .decrStackSize(extraction.getPlayerSlot(), extraction.getStack().stackSize);
                 } else {
-                    StoredItemStack pulled = terminal
-                        .pullStack(new StoredItemStack(extraction.getStack()), extraction.getStack().stackSize);
-                    actual = pulled == null ? null : pulled.getActualStack();
+                    actual = TerminalNetworkService
+                        .pull(terminal, extraction.getStack(), extraction.getStack().stackSize);
                 }
 
                 if (!isExpectedExtraction(extraction.getStack(), actual)) {
@@ -95,8 +91,7 @@ public final class SingleAutoCraftExecutor {
     private static void moveFinalOutputsToPlayer(TileEntityStorageTerminal terminal, EntityPlayerMP player,
         List<ItemStack> storedFinalOutputs, List<ItemStack> directFinalOutputs) {
         for (ItemStack output : storedFinalOutputs) {
-            StoredItemStack pulled = terminal.pullStack(new StoredItemStack(output), output.stackSize);
-            ItemStack stack = pulled == null ? null : pulled.getActualStack();
+            ItemStack stack = TerminalNetworkService.pull(terminal, output, output.stackSize);
             if (stack != null && !player.inventory.addItemStackToInventory(stack)) terminal.pushOrDrop(stack);
         }
         for (ItemStack output : directFinalOutputs) {

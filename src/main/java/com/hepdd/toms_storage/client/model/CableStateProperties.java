@@ -6,7 +6,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizon.gtnhlib.blockstate.core.BlockPropertyTrait;
 import com.gtnewhorizon.gtnhlib.blockstate.properties.BooleanBlockProperty;
-import com.hepdd.toms_storage.block.BlockInventoryCable;
+import com.hepdd.toms_storage.common.block.BlockInventoryCable;
 
 public final class CableStateProperties {
 

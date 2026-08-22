@@ -1,11 +1,13 @@
 package com.hepdd.toms_storage;
 
-import com.hepdd.toms_storage.proxy.CommonProxy;
-import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.hepdd.toms_storage.proxy.CommonProxy;
+import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -27,7 +29,9 @@ public class TomsStorage {
     public static final Logger LOG = LogManager.getLogger(MODID);
     public static final String NETWORK_CHANNEL = "TomsStorage";
 
-    @SidedProxy(clientSide = "com.hepdd.toms_storage.proxy.ClientProxy", serverSide = "com.hepdd.toms_storage.proxy.CommonProxy")
+    @SidedProxy(
+        clientSide = "com.hepdd.toms_storage.proxy.ClientProxy",
+        serverSide = "com.hepdd.toms_storage.proxy.CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.Instance(MODID)

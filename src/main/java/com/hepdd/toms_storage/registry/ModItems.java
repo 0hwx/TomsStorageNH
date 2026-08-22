@@ -1,10 +1,10 @@
 package com.hepdd.toms_storage.registry;
 
-import com.hepdd.toms_storage.TomsStorage;
-import com.hepdd.toms_storage.item.ItemWirelessTerminal;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+
+import com.hepdd.toms_storage.TomsStorage;
+import com.hepdd.toms_storage.common.item.ItemWirelessTerminal;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 

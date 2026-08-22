@@ -11,6 +11,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 public final class ModRecipes {
 
     public static void init() {
+        // spotless:off
         shaped(
             ModBlocks.INVENTORY_CONNECTOR.newItemStack(),
             "LLL",
@@ -62,6 +63,7 @@ public final class ModRecipes {
             'T', ModBlocks.STORAGE_TERMINAL.get(),
             'D', Items.diamond);
     }
+    // spotless:on
 
     private static void shaped(ItemStack result, Object... recipe) {
         GameRegistry.addRecipe(new ShapedOreRecipe(result, recipe));

@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 import cpw.mods.fml.common.Loader;
 
-final class SearchMatcher {
+public final class SearchMatcher {
 
     private static final String NECH_MODID = "nech";
     private static final int MAX_FALLBACK_SOURCE_LENGTH = 256;

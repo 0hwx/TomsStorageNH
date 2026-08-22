@@ -2,7 +2,7 @@ package com.hepdd.toms_storage.crafting;
 
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.nei.RecipeNbtSerializer;
+import com.hepdd.toms_storage.compat.nei.RecipeNbtSerializer;
 
 public final class CraftingPattern {
 

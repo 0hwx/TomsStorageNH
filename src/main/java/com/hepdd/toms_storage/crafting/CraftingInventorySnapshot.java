@@ -7,8 +7,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
 import com.hepdd.toms_storage.StorageItemUtils;
-import com.hepdd.toms_storage.StoredItemStack;
-import com.hepdd.toms_storage.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
+import com.hepdd.toms_storage.inventory.CachedItemStack;
 
 public final class CraftingInventorySnapshot {
 
@@ -20,10 +20,10 @@ public final class CraftingInventorySnapshot {
         boolean usePlayerInventory) {
         this.usePlayerInventory = usePlayerInventory;
 
-        for (StoredItemStack stored : terminal.getStacks()) {
-            ItemStack stack = stored.getStack();
-            if (stack != null && stored.getQuantity() > 0) {
-                terminalStacks.add(new Entry(stack, (int) Math.min(Integer.MAX_VALUE, stored.getQuantity()), -1));
+        for (CachedItemStack stored : terminal.getCachedStacks()) {
+            ItemStack stack = stored.stack();
+            if (stack != null && stored.count() > 0) {
+                terminalStacks.add(new Entry(stack, (int) Math.min(Integer.MAX_VALUE, stored.count()), -1));
             }
         }
 

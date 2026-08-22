@@ -8,8 +8,8 @@ import com.gtnewhorizon.gtnhlib.blockstate.core.BlockProperty;
 import com.gtnewhorizon.gtnhlib.blockstate.core.BlockPropertyTrait;
 import com.gtnewhorizon.gtnhlib.blockstate.core.MetaBlockProperty;
 import com.gtnewhorizon.gtnhlib.blockstate.properties.DirectionBlockProperty;
-import com.hepdd.toms_storage.block.BlockStorageTerminal;
-import com.hepdd.toms_storage.block.BlockStorageTerminal.MountPos;
+import com.hepdd.toms_storage.common.block.BlockStorageTerminal;
+import com.hepdd.toms_storage.common.block.BlockStorageTerminal.MountPos;
 
 public final class TerminalStateProperties {
 

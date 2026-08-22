@@ -16,7 +16,7 @@ The mod is intended for early-game inventory management and simple automation. I
 - NotEnoughItems, using the GTNH line or a compatible version
 - UniMixins
 
-The NEI integration uses GTNH NEI APIs and client-side mixins. A compatible NEI build must provide `AutoCraftingManager` and `DefaultOverlayHandler`.
+The NEI integration is provided by ModularUI2's NEI support plus one client-side mixin. A compatible NEI build must provide `AutoCraftingManager`.
 
 NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 

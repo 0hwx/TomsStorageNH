@@ -5,33 +5,53 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 
+import com.cleanroommc.modularui.utils.item.IItemHandler;
+import com.gtnewhorizon.gtnhlib.capability.Capabilities;
 import com.hepdd.toms_storage.StorageItemUtils;
-import com.hepdd.toms_storage.StoredItemStack;
 
 public final class StorageInventoryUtils {
 
     private StorageInventoryUtils() {}
 
-    public static List<StoredItemStack> getStacks(IStorageInventory inventory) {
-        Map<StoredItemStack, StoredItemStack> stacks = new HashMap<>();
+    /**
+     * Resolves a neighbouring tile to an item handler: its IItemHandler capability if it has one, otherwise a
+     * sided wrapper over its IInventory. Null when the tile is neither.
+     *
+     * <p>
+     * Capabilities.getCapability tries a direct cast before consulting CapabilityProvider, so a tile that
+     * simply implements IItemHandler is picked up without being a CapabilityProvider.
+     */
+    public static IItemHandler asHandler(TileEntity tile, ForgeDirection side) {
+        if (tile == null) return null;
+        IItemHandler handler = Capabilities.getCapability(tile, IItemHandler.class, side);
+        if (handler != null) return handler;
+        return tile instanceof IInventory inventory ? new SidedInvWrapper(inventory, side) : null;
+    }
+
+    /** Aggregates every slot into de-duplicated {@link CachedItemStack}s (identity + summed count). */
+    public static List<CachedItemStack> aggregate(IItemHandler inventory) {
+        Map<CachedItemStack, Long> totals = new HashMap<>();
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stack = inventory.getStackInSlot(i);
             if (stack != null && stack.stackSize > 0) {
-                StoredItemStack key = new StoredItemStack(stack);
-                StoredItemStack existing = stacks.get(key);
-                if (existing == null) {
-                    stacks.put(key, key);
-                } else {
-                    existing.grow(stack.stackSize);
-                }
+                totals.merge(new CachedItemStack(stack, 0), (long) stack.stackSize, Long::sum);
             }
         }
-        return new ArrayList<>(stacks.values());
+        List<CachedItemStack> result = new ArrayList<>(totals.size());
+        for (Map.Entry<CachedItemStack, Long> entry : totals.entrySet()) {
+            result.add(
+                entry.getKey()
+                    .withCount(entry.getValue()));
+        }
+        return result;
     }
 
-    public static ItemStack insertStacked(IStorageInventory inventory, ItemStack stack, boolean simulate) {
+    public static ItemStack insertStacked(IItemHandler inventory, ItemStack stack, boolean simulate) {
         if (stack == null || stack.stackSize < 1) return null;
         ItemStack remainder = stack.copy();
 
@@ -51,8 +71,7 @@ public final class StorageInventoryUtils {
         return remainder;
     }
 
-    public static ItemStack extractMatching(IStorageInventory inventory, ItemStack match, int amount,
-        boolean simulate) {
+    public static ItemStack extractMatching(IItemHandler inventory, ItemStack match, int amount, boolean simulate) {
         if (match == null || amount < 1) return null;
         ItemStack result = null;
         int remaining = amount;

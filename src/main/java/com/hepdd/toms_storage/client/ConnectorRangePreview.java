@@ -3,7 +3,6 @@ package com.hepdd.toms_storage.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hepdd.toms_storage.registry.ModBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.renderer.Tessellator;
@@ -14,6 +13,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import org.lwjgl.opengl.GL11;
 
 import com.hepdd.toms_storage.network.PacketConnectorRangePreview;
+import com.hepdd.toms_storage.registry.ModBlocks;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;

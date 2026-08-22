@@ -2,7 +2,7 @@ package com.hepdd.toms_storage.inventory;
 
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.hepdd.toms_storage.tile.TileEntityInventoryConnector;
+import com.hepdd.toms_storage.common.tile.TileEntityInventoryConnector;
 
 public interface IStorageNetworkEndpoint {
 

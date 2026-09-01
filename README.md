@@ -71,6 +71,7 @@ Storage network tuning, in `config/tomsstorage.cfg`:
 - `networkTopologyRescanInterval` (default 100 ticks) — how often an Inventory Connector re-walks its network to find blocks placed or removed by other mods. Blocks from this mod are picked up immediately, so this only bounds how long a foreign chest takes to appear.
 - `networkSweepSlotsPerTick` (default 512) — how many network slots each world re-reads per tick to notice items moved by other mods. Higher reacts faster to outside changes, lower costs less.
 - `debugNetworkStats` (default false) — adds a statistics line (members, slots, distinct items, last rebuild time) when right-clicking an Inventory Connector.
+- `neiAutocrafting` (default true) — lets NEI bookmark autocrafting draw ingredients from the storage network. Synced from the server, so a server that turns it off disables it for every client.
 - `shiftCraftLimit` (default `ONE_STACK`) — how much one shift-click on the crafting result produces. `ONE_STACK` stops at a full stack of the result, the same boundary AE2 uses, so a recipe yielding 3 at a time stops at 63 rather than overshooting. `ALL_AVAILABLE` keeps crafting until the ingredients run out. Applies to both craft directions; a plain click is always a single craft and is never limited.
 
 ### Content Toggles

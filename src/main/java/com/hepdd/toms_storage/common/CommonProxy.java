@@ -45,10 +45,6 @@ public class CommonProxy {
         MinecraftForge.EVENT_BUS.register(networkEvents);
     }
 
-    /**
-     * Built through the proxy so the class carrying NEI's recipe transfer - which is client-only, since
-     * MUI's INEIRecipeTransfer is parameterised on GuiContainer - is never named in code the server runs.
-     */
     public ModularContainer craftingTerminalContainer(TileEntityCraftingTerminal terminal,
         IItemHandlerModifiable craftingInventory) {
         return new CraftingTerminalContainer(terminal, craftingInventory);

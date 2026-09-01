@@ -11,10 +11,6 @@ import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkHost;
 
-/**
- * Per-world index of live network hosts. Exists so a block change can find the network that cares about
- * it without every host polling, and so one sweep budget is shared across all networks in a world.
- */
 public final class StorageNetworkRegistry {
 
     private static final Map<World, StorageNetworkRegistry> INSTANCES = new IdentityHashMap<>();

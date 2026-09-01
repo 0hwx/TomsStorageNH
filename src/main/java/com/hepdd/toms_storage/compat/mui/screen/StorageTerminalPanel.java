@@ -46,21 +46,18 @@ public class StorageTerminalPanel extends ModularPanel {
     protected static final int GRID_Y = 17;
     protected static final int SLOT = 18;
 
-    // Header strip left of the search field; both bars are centred against the field's 10px height.
     private static final int STATUS_X = 8;
     private static final int STATUS_Y = 6;
 
-    // Sync ids 0-3 are taken by the grid, the two sort buttons and the crafting terminal's craft mode.
     private static final int SYNC_STATUS = 4;
 
     protected final TileEntityStorageTerminal tile;
 
-    /** Panel name doubles as the GUI texture name; buttons live on the same sheet as the background. */
     protected final String textureName;
 
     private TerminalSearchMode searchMode = TomsConfig.Client.terminalSearchMode;
     private StringSyncValue searchValue;
-    private TerminalGridSyncHandler grid;
+    private final TerminalGridSyncHandler grid;
 
     public StorageTerminalPanel(TileEntityStorageTerminal tile, PanelSyncManager sync, UISettings settings) {
         this("storage_terminal", 194, 202, 119, tile, sync, settings);
@@ -168,7 +165,6 @@ public class StorageTerminalPanel extends ModularPanel {
         sortDirection.allowC2S(true);
         sync.syncValue("terminal_sort_direction", 2, sortDirection);
 
-        // Button faces come off the panel's own texture sheet: 194 + state*16 across, one row per button.
         child(new ButtonWidget<>().onMousePressed(mouseButton -> {
             SortingTypes[] values = SortingTypes.VALUES;
             sortType.setValue(

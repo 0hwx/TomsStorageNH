@@ -18,13 +18,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * The crafting terminal container with NEI's recipe transfer bolted on.
- *
- * <p>
- * Separate from {@link CraftingTerminalContainer}, and client-only, because MUI's INEIRecipeTransfer is
- * parameterised on the client-only GuiContainer: implementing it on the shared container makes a
- * dedicated server load GuiContainerWrapper and blow up on EntityClientPlayerMP. MUI only ever looks for
- * the interface on the client anyway - it tests {@code gui.inventorySlots instanceof INEIRecipeTransfer}
- * while rendering - so the server has no use for it.
  */
 @SideOnly(Side.CLIENT)
 @Optional.Interface(iface = "com.cleanroommc.modularui.integration.nei.INEIRecipeTransfer", modid = "NotEnoughItems")
@@ -63,7 +56,7 @@ public class NeiCraftingTerminalContainer extends CraftingTerminalContainer
     @Optional.Method(modid = "NotEnoughItems")
     @Override
     public boolean canCraft(GuiContainerWrapper gui, IRecipeHandler recipe, int recipeIndex) {
-        return NeiCompat.canCraft(this, gui, recipe, recipeIndex);
+        return NeiCompat.canCraft(this, recipe, recipeIndex);
     }
 
     @Optional.Method(modid = "NotEnoughItems")

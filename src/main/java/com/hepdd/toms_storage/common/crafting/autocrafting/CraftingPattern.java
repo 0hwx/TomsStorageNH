@@ -5,7 +5,6 @@ import net.minecraft.item.ItemStack;
 
 import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 
-/** One recipe as the planner sees it: an output, and per grid slot the items that would satisfy it. */
 public final class CraftingPattern {
 
     public static final int GRID_SIZE = 9;
@@ -34,19 +33,10 @@ public final class CraftingPattern {
         return copyIngredients(ingredients);
     }
 
-    /**
-     * Identity of this pattern's output, for cycle detection. Spelled out rather than hashed: two
-     * different NBT tags sharing a hash would look like a recipe cycle and abort a valid craft.
-     */
     public String getKey() {
         return key;
     }
 
-    /**
-     * True when using any ingredient gives something back - a bucket, a tool taking damage. Such a
-     * pattern cannot be batched: the leftover is produced once per craft, and for a damageable tool each
-     * craft's leftover differs from the last.
-     */
     public boolean hasRemainders() {
         return hasRemainders;
     }

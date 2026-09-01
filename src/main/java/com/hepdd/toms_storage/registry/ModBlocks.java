@@ -53,8 +53,6 @@ public enum ModBlocks {
         }
     }
 
-    // A supplier, not a value: enum constants are built the moment this class loads, which need not be
-    // after the config has been read. Asking at registration time keeps the two orders independent.
     private final BooleanSupplier isEnabled;
     private final Block theBlock;
     /**

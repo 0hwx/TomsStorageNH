@@ -1,6 +1,7 @@
 package com.hepdd.toms_storage.common.inventory.network;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -15,48 +16,34 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
-/**
- * Contents of one network: item identity -> (count, slots holding it), plus the empty slots and a per-slot
- * shadow of what was last seen there.
- *
- * <p>
- * Updated by deltas. The sweep re-reads slots and is authoritative, so a missed delta self-corrects
- * within one sweep instead of accumulating.
- */
 public final class NetworkItemIndex {
 
     private final Object2ObjectOpenHashMap<ItemKey, Entry> entries = new Object2ObjectOpenHashMap<>();
     private final ItemKey probe = ItemKey.scratch();
 
-    // Empty slots are a bitmap rather than a list: O(1) to set and clear, and iterating it yields slots in
-    // ascending order, so a new item fills the lowest empty slot the way a plain slot walk used to.
     private long[] emptyBits = new long[0];
     private int emptyCount;
-    // Running sum of every slot's stack size, so the terminal's fill bar costs nothing to read.
+
     private long totalCount;
 
     private ItemKey[] shadowKey = new ItemKey[0];
     private int[] shadowCount = new int[0];
-    // Where each slot sits inside its item's slot list, so removal is O(1) instead of a scan.
+
     private int[] slotListPos = new int[0];
 
     private int revision;
     private List<CachedItemStack> aggregate = Collections.emptyList();
     private int aggregateRevision = -1;
 
-    // Set by verifyAgainst so the caller can name the member that owns the offending slot.
     private int lastBadSlot = -1;
 
-    /** Resets everything and declares every slot empty. Call on graph rebuild, then re-read all slots. */
     public void resize(int totalSlots) {
         entries.clear();
         shadowKey = new ItemKey[totalSlots];
         shadowCount = new int[totalSlots];
         slotListPos = new int[totalSlots];
         emptyBits = new long[(totalSlots + 63) >>> 6];
-        for (int word = 0; word < emptyBits.length; word++) {
-            emptyBits[word] = -1L;
-        }
+        Arrays.fill(emptyBits, -1L);
         // Clear the padding bits past the last slot so nextEmptySlot cannot hand out one that does not exist.
         int tail = totalSlots & 63;
         if (tail != 0) emptyBits[emptyBits.length - 1] = (1L << tail) - 1L;
@@ -77,12 +64,10 @@ public final class NetworkItemIndex {
         return emptyCount;
     }
 
-    /** Every item in the network counted individually, not per stack. */
     public long totalCount() {
         return totalCount;
     }
 
-    /** The lowest empty slot at or after {@code from}, or -1 when there is none. */
     public int nextEmptySlot(int from) {
         if (from < 0) from = 0;
         int word = from >>> 6;
@@ -102,13 +87,6 @@ public final class NetworkItemIndex {
         return entry == null ? IntLists.EMPTY_LIST : entry.slots;
     }
 
-    public long countOf(ItemStack stack) {
-        if (stack == null) return 0L;
-        Entry entry = entries.get(probe.set(stack));
-        return entry == null ? 0L : entry.count;
-    }
-
-    /** Records what a slot actually holds now. No-op when nothing changed. */
     public void applySlot(int slot, ItemStack stack) {
         if (slot < 0 || slot >= shadowKey.length) return;
         if (stack != null && stack.stackSize <= 0) stack = null;
@@ -118,7 +96,6 @@ public final class NetworkItemIndex {
 
         if (oldKey == null && stack == null) return;
 
-        // Same item, different amount: adjust the running total and leave both lists alone.
         if (oldKey != null && oldKey.matches(stack)) {
             if (oldCount == stack.stackSize) return;
             Entry entry = entries.get(oldKey);
@@ -132,7 +109,6 @@ public final class NetworkItemIndex {
         if (oldKey == null) {
             setEmpty(slot, false);
         } else {
-            // Driven off the shadow arrays, not the entry, so a missing entry cannot drift the total.
             totalCount -= oldCount;
             Entry entry = entries.get(oldKey);
             if (entry != null) {
@@ -161,7 +137,6 @@ public final class NetworkItemIndex {
         revision++;
     }
 
-    /** One CachedItemStack per distinct item, rebuilt only when the contents actually moved. */
     public List<CachedItemStack> aggregate() {
         if (aggregateRevision == revision) return aggregate;
         List<CachedItemStack> list = new ArrayList<>(entries.size());
@@ -174,16 +149,6 @@ public final class NetworkItemIndex {
         return list;
     }
 
-    /**
-     * Re-reads every slot and reports where the index disagrees with reality. Debug only, O(total slots).
-     *
-     * <p>
-     * Worth having because updates are relative (`count += new - old`): the sweep repairs a wrong shadow,
-     * but a drifted running total survives until the next {@link #resize}, and nothing else would notice.
-     *
-     * @return an empty string when consistent, otherwise a short summary
-     */
-    /** The first slot {@link #verifyAgainst} found wrong, or -1. */
     public int lastBadSlot() {
         return lastBadSlot;
     }
@@ -246,8 +211,6 @@ public final class NetworkItemIndex {
             Entry entry = entries.get(mapping.getKey());
             if (entry == null || entry.count != mapping.getValue()[0]) countBad++;
         }
-        // Entries the live read never produced. Counted explicitly rather than by size difference, which
-        // would cancel out when the index is both missing one item and holding a stale one.
         int orphans = 0;
         for (ItemKey key : entries.keySet()) {
             if (!expected.containsKey(key)) orphans++;

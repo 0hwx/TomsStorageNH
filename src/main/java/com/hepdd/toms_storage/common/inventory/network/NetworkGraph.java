@@ -24,7 +24,6 @@ import com.hepdd.toms_storage.utils.StorageUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-/** Immutable snapshot of one connector's reachable inventories. Rebuilt only when the topology is dirty. */
 public final class NetworkGraph {
 
     public static final NetworkGraph EMPTY = new NetworkGraph(
@@ -83,7 +82,6 @@ public final class NetworkGraph {
         return positions.contains(pos);
     }
 
-    /** True when the position is a member or orthogonally adjacent to one, i.e. a change there can matter. */
     public boolean touches(long pos) {
         if (positions.contains(pos)) return true;
         int x = CoordinatePacker.unpackX(pos);
@@ -97,7 +95,6 @@ public final class NetworkGraph {
         return false;
     }
 
-    /** Endpoints are a capability, so a tile from another mod can be one without implementing our class. */
     public static StorageNetworkEndpoint endpointAt(TileEntity tile, ForgeDirection side) {
         return tile == null ? null : Capabilities.getCapability(tile, StorageNetworkEndpoint.class, side);
     }
@@ -109,10 +106,6 @@ public final class NetworkGraph {
         return false;
     }
 
-    /**
-     * Whether another graph maps the same positions to the same global slot ranges. When it does, an index
-     * built against that graph is still addressed correctly and does not need rebuilding.
-     */
     public boolean sameLayout(NetworkGraph other) {
         if (other == null || other.totalSlots != totalSlots || other.members.length != members.length) return false;
         for (int i = 0; i < members.length; i++) {
@@ -210,16 +203,11 @@ public final class NetworkGraph {
 
                 if (tile instanceof TileEntityInventoryConnector) continue;
 
-                // NOTE: the TileEntityInventoryConnector skip above MUST stay above this branch -- asHandler
-                // would otherwise return another connector's whole network and nest it inside this one.
                 IItemHandler handler = StorageUtils.asHandler(tile, access);
                 if (handler != null && (!TomsConfig.onlyTrimsConnect || currentIsTrim)) {
                     Object backing = handler instanceof SidedInvWrapper wrapper ? wrapper.getInventory() : handler;
-                    // A duplicate still counts as a network position, so changes there still invalidate.
                     memberPositions.add(next);
                     int memberSlots = handler.getSlots();
-                    // Slotless members are dropped: they contribute nothing, and an empty span would make
-                    // two members share a prefix-sum offset, which a binary search cannot tell apart.
                     if (memberSlots > 0 && seenBacking.add(backing)) {
                         if (handler instanceof SidedInvWrapper wrapper) wrapper.cacheAccessibleSlots();
                         members.add(new MemberRef(next, tile, handler, memberSlots));
@@ -273,9 +261,8 @@ public final class NetworkGraph {
             return firstSlot;
         }
 
-        /** A broken tile still holds its item array, so writing or reading through it would move phantom items. */
         public boolean isUsable() {
-            return tile == null || !tile.isInvalid();
+            return tile != null && tile.isInvalid();
         }
     }
 

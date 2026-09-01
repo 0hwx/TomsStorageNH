@@ -5,7 +5,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
-/** Drives the per-world sweep budget and drops registry state when a world goes away. */
 public final class StorageNetworkEvents {
 
     @SubscribeEvent

@@ -7,9 +7,6 @@ import com.cleanroommc.modularui.utils.item.ItemHandlerHelper;
 import com.github.bsideup.jabel.Desugar;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
-/**
- * Immutable (identity, count) pair for the storage network's aggregated contents and the MUI2 terminal.
- */
 @Desugar
 public record CachedItemStack(ItemStack stack, long count) {
 

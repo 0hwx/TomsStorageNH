@@ -11,14 +11,6 @@ import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
-/**
- * What the planner is allowed to spend: the network's contents, optionally the player's inventory, and
- * whatever the plan produces along the way.
- *
- * <p>
- * Reserving only marks the snapshot, never the world. Nothing here is spent until the executor applies
- * the finished plan, which is what lets a plan be abandoned for free.
- */
 public final class CraftingInventorySnapshot {
 
     private final List<Entry> terminalStacks = new ArrayList<>();
@@ -45,11 +37,6 @@ public final class CraftingInventorySnapshot {
         }
     }
 
-    /**
-     * Reserves {@code amount} of whichever candidate the snapshot can cover. Intermediates go first: a
-     * sub-craft was planned to be spent here, and leaving it unspent would make the plan produce items
-     * nobody asked for.
-     */
     public Extraction reserve(ItemStack[] candidates, int amount) {
         if (candidates == null || amount < 1) return null;
         for (ItemStack candidate : candidates) {
@@ -66,10 +53,6 @@ public final class CraftingInventorySnapshot {
         return null;
     }
 
-    /**
-     * Hands a reservation back, so the planner can abandon a half-built operation and retry it smaller.
-     * Without this a failed attempt would leave the snapshot claiming items nothing will ever spend.
-     */
     public void release(Extraction extraction) {
         if (extraction == null) return;
         ItemStack stack = extraction.getStack();
@@ -82,7 +65,6 @@ public final class CraftingInventorySnapshot {
         }
     }
 
-    /** Records something the plan will make: a sub-craft output, or a leftover a craft hands back. */
     public void addIntermediate(ItemStack stack) {
         if (stack == null || stack.stackSize <= 0) return;
         for (Entry entry : intermediates) {
@@ -95,14 +77,11 @@ public final class CraftingInventorySnapshot {
     }
 
     private List<Entry> entriesFor(Extraction.Source source) {
-        switch (source) {
-            case INTERMEDIATE:
-                return intermediates;
-            case PLAYER:
-                return playerStacks;
-            default:
-                return terminalStacks;
-        }
+        return switch (source) {
+            case INTERMEDIATE -> intermediates;
+            case PLAYER -> playerStacks;
+            default -> terminalStacks;
+        };
     }
 
     private static Extraction reserveFrom(List<Entry> entries, ItemStack candidate, int amount,

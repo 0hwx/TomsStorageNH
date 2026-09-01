@@ -1,13 +1,5 @@
 package com.hepdd.toms_storage.common.crafting.autocrafting;
 
-/**
- * The result of planning or applying an auto-craft. One type for both halves: they fail for the same
- * kinds of reason and the caller treats them the same way.
- *
- * <p>
- * {@code reason} is a stable identifier, not a message - it goes to {@code AutoCraftDebug} and could back a
- * lang key later.
- */
 public final class CraftOutcome {
 
     private final boolean success;
@@ -40,7 +32,6 @@ public final class CraftOutcome {
         return reason;
     }
 
-    /** The plan, on a successful plan outcome; null otherwise. */
     public CraftingPlan getPlan() {
         return plan;
     }

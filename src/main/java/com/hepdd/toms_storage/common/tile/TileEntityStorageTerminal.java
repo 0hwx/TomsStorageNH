@@ -22,7 +22,6 @@ import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.TomsStorage;
 import com.hepdd.toms_storage.common.block.BlockStorageTerminal;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
-import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetwork;
 import com.hepdd.toms_storage.common.item.ItemWirelessTerminal;
 import com.hepdd.toms_storage.compat.mui.screen.StorageTerminalPanel;
@@ -47,7 +46,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return new ModularScreen(TomsStorage.MODID, mainPanel);
     }
 
-    /** MUI2 terminal contents: the network's shared, cached aggregate (no per-terminal scan). */
     public List<CachedItemStack> getCachedStacks() {
         StorageNetwork access = getAttachedAccess();
         if (access != null) return access.getAggregatedStacks();
@@ -55,7 +53,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return inventory == null ? Collections.emptyList() : StorageUtils.aggregate(inventory);
     }
 
-    /** Slot occupancy of whatever the terminal is attached to, for the header status bar. */
     public int getTotalSlots() {
         StorageNetwork access = getAttachedAccess();
         if (access != null) return access.getTotalSlots();
@@ -65,7 +62,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
 
     public int getUsedSlots() {
         StorageNetwork access = getAttachedAccess();
-        // A network keeps a running empty-slot count; a plain inventory is one chest, so scanning is cheap.
         if (access != null) return access.getUsedSlots();
         IItemHandler inventory = getAttachedInventory();
         if (inventory == null) return 0;
@@ -76,7 +72,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return used;
     }
 
-    /** Items held, counted individually. Paired with {@link #getItemCapacity()} for the fill bar. */
     public long getStoredItems() {
         StorageNetwork access = getAttachedAccess();
         if (access != null) return access.getStoredItems();
@@ -90,7 +85,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return stored;
     }
 
-    /** Sum of every slot's own limit, so a drawer or barrel counts for what it can really hold. */
     public long getItemCapacity() {
         StorageNetwork access = getAttachedAccess();
         if (access != null) return access.getItemCapacity();
@@ -103,26 +97,16 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return capacity;
     }
 
-    /** Bumps when the network contents change; the sync handler re-sorts only when this changes. */
     public int getRevision() {
         StorageNetwork access = getAttachedAccess();
         // No connector to cache against: force a recompute each tick (single small inventory, cheap).
         return access != null ? access.getContentsRevision() : (int) worldObj.getTotalWorldTime();
     }
 
-    /** Marks the network aggregate + this tile dirty after a contents change. */
     public void markContentsChanged() {
         StorageNetwork access = getAttachedAccess();
         if (access != null) access.markContentsDirty();
         markDirty();
-    }
-
-    public ItemStack pushStack(ItemStack stack) {
-        return TerminalNetworkService.push(this, stack);
-    }
-
-    public void pushOrDrop(ItemStack stack) {
-        TerminalNetworkService.pushOrDrop(this, stack);
     }
 
     public boolean canInteractWith(EntityPlayer player) {
@@ -189,7 +173,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return StorageUtils.asHandler(getAttachedTile(attach), attach.getOpposite());
     }
 
-    /** A whole network if one is attached; null when the terminal sits on a plain inventory. */
     private StorageNetwork getAttachedAccess() {
         ForgeDirection attach = getAttachDirection();
         TileEntity tile = getAttachedTile(attach);
@@ -251,8 +234,6 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
 
         ASCENDING,
         DESCENDING;
-
-        public static final SortDirection[] VALUES = values();
 
         public SortDirection toggle() {
             return this == ASCENDING ? DESCENDING : ASCENDING;

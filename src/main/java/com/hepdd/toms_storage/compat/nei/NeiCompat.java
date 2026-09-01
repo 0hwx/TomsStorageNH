@@ -13,17 +13,19 @@ import org.lwjgl.opengl.GL11;
 import com.cleanroommc.modularui.screen.GuiContainerWrapper;
 import com.cleanroommc.modularui.utils.GlStateManager;
 import com.cleanroommc.modularui.utils.Platform;
+import com.cleanroommc.modularui.utils.item.ItemHandlerHelper;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
 import com.hepdd.toms_storage.common.crafting.autocrafting.CraftingPattern;
 import com.hepdd.toms_storage.common.crafting.autocrafting.RecipeNbtSerializer;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
-import com.hepdd.toms_storage.utils.StorageUtils;
 
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.NEIClientUtils;
+import codechicken.nei.NEIServerUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.recipe.GuiOverlayButton;
@@ -36,7 +38,6 @@ public final class NeiCompat {
     private static final int GRID_Y = 6;
     private static final int SLOT = 18;
 
-    // Placement recorded by positionStacks, drawn by ItemSlotTerminalCraftingMatrix. Indexed by 3x3 matrix slot.
     private static final ItemStack[] GHOSTS = new ItemStack[9];
 
     private static int nextAutoCraftRequestId;
@@ -45,8 +46,6 @@ public final class NeiCompat {
         return new String[] { "crafting" };
     }
 
-    // Map the recipe's ingredient positions to the 3x3 matrix and ask the server (via the grid channel) to fill.
-    // Each slot's count comes from the multiplier (shift = max stack); the permutation prefers held items.
     public static int transferRecipe(CraftingTerminalContainer container, GuiContainerWrapper gui,
         IRecipeHandler recipe, int recipeIndex, int multiplier) {
         TerminalGridSyncHandler grid = grid(container);
@@ -70,7 +69,6 @@ public final class NeiCompat {
         return 1;
     }
 
-    // Presence dots on the "+" button: an ingredient is present if it's in the player inventory OR the network.
     public static List<GuiOverlayButton.ItemOverlayState> presenceOverlay(CraftingTerminalContainer container,
         GuiContainerWrapper gui, IRecipeHandler recipe, int recipeIndex) {
         List<PositionedStack> ingredients = recipe.getIngredientStacks(recipeIndex);
@@ -90,13 +88,6 @@ public final class NeiCompat {
         return states;
     }
 
-    // Ghost overlay, data half. MUI2 hands NEI every slot at a fixed (1,1) in ItemSlot#renderSlotUnderlayNEI
-    // (the GL matrix is already at the widget origin), and DefaultOverlayRenderer picks its slot by comparing
-    // relx/rely against that. So no coordinate we write here can ever identify one matrix slot -- writing 1,1
-    // would instead draw every ingredient into every empty slot in the GUI. We therefore record the placement
-    // and draw it ourselves in ItemSlotTerminalCraftingMatrix, leaving relx/rely at the recipe coords (25/43/61 by
-    // 6/24/42,
-    // never 1) so NEI's own renderer matches nothing.
     public static ArrayList<PositionedStack> positionStacks(CraftingTerminalContainer container,
         GuiContainerWrapper gui, ArrayList<PositionedStack> stacks) {
         Arrays.fill(GHOSTS, null);
@@ -125,16 +116,13 @@ public final class NeiCompat {
         GL11.glPopAttrib();
     }
 
-    public static boolean canCraft(CraftingTerminalContainer container, GuiContainerWrapper gui, IRecipeHandler recipe,
-        int recipeIndex) {
-        return grid(container) != null && getRecipeOutput(recipe, recipeIndex) != null;
+    public static boolean canCraft(CraftingTerminalContainer container, IRecipeHandler recipe, int recipeIndex) {
+        return TomsConfig.neiAutocrafting && grid(container) != null && getRecipeOutput(recipe, recipeIndex) != null;
     }
 
-    // NEI auto-craft: serialise the recipe, simulate it against the client-side preview, then ship it
-    // over the grid's C2S channel. Unlike the legacy path this needs no slot-position search -- matrixIndex
-    // maps a PositionedStack to its matrix slot arithmetically.
     public static boolean craft(CraftingTerminalContainer container, GuiContainerWrapper gui, IRecipeHandler recipe,
         int recipeIndex, int multiplier) {
+        if (!TomsConfig.neiAutocrafting) return false;
         TerminalGridSyncHandler grid = grid(container);
         if (grid == null) return false;
 
@@ -143,7 +131,7 @@ public final class NeiCompat {
 
         int count = Math.max(1, multiplier);
         ItemStack[][] mapped = new ItemStack[CraftingPattern.GRID_SIZE][];
-        for (int i = 0; i < mapped.length; i++) mapped[i] = new ItemStack[0];
+        Arrays.fill(mapped, new ItemStack[0]);
         for (PositionedStack ingredient : recipe.getIngredientStacks(recipeIndex)) {
             int index = matrixIndex(ingredient);
             if (index < 0) return false;
@@ -175,7 +163,6 @@ public final class NeiCompat {
         return true;
     }
 
-    // NEI handlers expose the result through getResultStack(int), which isn't on IRecipeHandler.
     private static ItemStack getRecipeOutput(IRecipeHandler recipe, int recipeIndex) {
         try {
             Object result = recipe.getClass()
@@ -200,15 +187,13 @@ public final class NeiCompat {
         return (col < 0 || col > 2 || row < 0 || row > 2) ? -1 : row * 3 + col;
     }
 
-    // Prefer the ingredient permutation the player/network actually holds (so "any planks" uses ones you own),
-    // consuming from the pool as it assigns; falls back to the first permutation if none are available.
     private static ItemStack choosePermutation(PositionedStack ingredient, List<ItemStack> pool) {
         for (ItemStack option : ingredient.items) {
             if (option == null) continue;
             for (ItemStack have : pool) {
-                if (have.stackSize > 0 && StorageUtils.areItemStacksEqual(have, option, true)) {
+                if (have.stackSize > 0 && NEIServerUtils.areStacksSameTypeCraftingWithNBT(option, have)) {
                     have.stackSize--;
-                    return option;
+                    return ItemHandlerHelper.copyStackWithSize(have, 1);
                 }
             }
         }
@@ -218,11 +203,9 @@ public final class NeiCompat {
         return null;
     }
 
-    // Player-accessible GUI slots (copies) + the network snapshot; sizes are mutable so callers can decrement.
     private static List<ItemStack> availableItems(CraftingTerminalContainer container, GuiContainerWrapper gui) {
         List<ItemStack> available = new ArrayList<>();
-        for (Object object : gui.inventorySlots.inventorySlots) {
-            Slot slot = (Slot) object;
+        for (Slot slot : gui.inventorySlots.inventorySlots) {
             if (slot != null && slot.getStack() != null
                 && slot.getStack().stackSize > 0
                 && slot.isItemValid(slot.getStack())

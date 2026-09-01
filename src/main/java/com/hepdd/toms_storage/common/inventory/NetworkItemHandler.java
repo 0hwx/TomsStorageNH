@@ -9,7 +9,6 @@ import com.hepdd.toms_storage.common.inventory.network.NetworkGraph;
 import com.hepdd.toms_storage.common.inventory.network.NetworkItemIndex;
 import com.hepdd.toms_storage.common.inventory.network.interfaces.StorageNetworkHost;
 
-/** Flat IItemHandler view over a NetworkGraph. Slot -> member is a binary search over prefix sums. */
 public class NetworkItemHandler implements IItemHandlerModifiable {
 
     private NetworkGraph graph = NetworkGraph.EMPTY;
@@ -28,17 +27,9 @@ public class NetworkItemHandler implements IItemHandlerModifiable {
         this.index = index;
     }
 
-    /**
-     * The contents index backing this view, or null when there is none. Pending writes are applied first,
-     * so a caller never reads slot lists that are behind the real inventories.
-     */
     public NetworkItemIndex getIndex() {
         if (index != null && host != null) host.flushPendingWrites();
         return index;
-    }
-
-    public NetworkGraph getGraph() {
-        return graph;
     }
 
     @Override
@@ -94,14 +85,13 @@ public class NetworkItemHandler implements IItemHandlerModifiable {
         notifyWritten(slot);
     }
 
-    /** Null for an out-of-range slot or a member whose tile died; a dead tile is never touched. */
     private NetworkGraph.MemberRef memberFor(int slot) {
         int[] offsets = graph.offsets();
         if (slot < 0 || slot >= graph.totalSlots() || offsets.length == 0) return null;
         int index = Arrays.binarySearch(offsets, slot);
         if (index < 0) index = -index - 2;
         NetworkGraph.MemberRef member = graph.members()[index];
-        if (!member.isUsable()) {
+        if (member.isUsable()) {
             if (host != null) host.markTopologyDirty();
             return null;
         }

@@ -1,12 +1,11 @@
 package com.hepdd.toms_storage.common.inventory.network;
 
+import java.util.Objects;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-/**
- * Allocation-free item identity.
- */
 public final class ItemKey {
 
     private Item item;
@@ -14,7 +13,6 @@ public final class ItemKey {
     private NBTTagCompound tag;
     private int hash;
 
-    /** A reusable probe. Never store one in a map. */
     public static ItemKey scratch() {
         return new ItemKey();
     }
@@ -41,7 +39,7 @@ public final class ItemKey {
         if (stack == null) return false;
         if (item != stack.getItem() || meta != stack.getItemDamage()) return false;
         NBTTagCompound other = stack.hasTagCompound() ? stack.getTagCompound() : null;
-        return tag == null ? other == null : tag.equals(other);
+        return Objects.equals(tag, other);
     }
 
     public ItemStack toStack() {
@@ -53,10 +51,9 @@ public final class ItemKey {
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
-        if (!(other instanceof ItemKey)) return false;
-        ItemKey that = (ItemKey) other;
+        if (!(other instanceof ItemKey that)) return false;
         if (item != that.item || meta != that.meta) return false;
-        return tag == null ? that.tag == null : tag.equals(that.tag);
+        return Objects.equals(tag, that.tag);
     }
 
     @Override

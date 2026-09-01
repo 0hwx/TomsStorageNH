@@ -14,16 +14,8 @@ import net.minecraft.item.crafting.CraftingManager;
 import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 import com.hepdd.toms_storage.common.crafting.CraftingStackMatcher;
 
-/**
- * Works out, against a snapshot, every extraction an auto-craft would need - without touching the world.
- *
- * <p>
- * Crafts of the same pattern are batched into one operation where the recipe allows it, so asking for a
- * stack costs one reservation and one recipe validation per ingredient rather than one per craft.
- */
 public final class CraftingPlanner {
 
-    /** How many sub-crafts deep a request may go before we call it pathological. */
     private static final int MAX_DEPTH = 8;
 
     private final EntityPlayerMP player;
@@ -47,7 +39,6 @@ public final class CraftingPlanner {
         this.allowSubCrafting = allowSubCrafting;
     }
 
-    /** @param times how many runs of {@code root} to plan */
     public CraftOutcome plan(CraftingPattern root, int times) {
         CraftingPlan plan = new CraftingPlan();
         CraftOutcome outcome = planPattern(root, plan, Math.max(1, times), new ArrayDeque<>(), true);
@@ -86,7 +77,6 @@ public final class CraftingPlanner {
         }
     }
 
-    /** Reserves one operation's worth of ingredients, or reserves nothing at all. */
     private CraftOutcome planOperation(CraftingPattern pattern, CraftingPlan plan, int chunk, Deque<String> resolving,
         boolean finalOutput) {
         ItemStack[][] ingredients = pattern.getIngredients();
@@ -160,10 +150,6 @@ public final class CraftingPlanner {
         }
     }
 
-    /**
-     * Runs the recipe for real against the reserved items, one of each - a batched reservation carries a
-     * multiplied stack size, and some recipes check sizes.
-     */
     private ItemStack validate(Extraction[] extracted) {
         for (int i = 0; i < CraftingPattern.GRID_SIZE; i++) {
             ItemStack single = null;
@@ -178,7 +164,6 @@ public final class CraftingPlanner {
             .findMatchingRecipe(scratch, player.worldObj);
     }
 
-    /** How much of a slot one craft eats; NEI writes it into the candidate's stack size. */
     private static int perCraftAmount(ItemStack[] candidates) {
         for (ItemStack candidate : candidates) {
             if (candidate != null) return Math.max(1, candidate.stackSize);

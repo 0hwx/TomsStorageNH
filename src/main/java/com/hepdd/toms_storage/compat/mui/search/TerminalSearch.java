@@ -1,5 +1,8 @@
 package com.hepdd.toms_storage.compat.mui.search;
 
+import static com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.SortDirection;
+import static com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.SortingTypes;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,7 +29,7 @@ public final class TerminalSearch {
     private final Map<CachedItemStack, SearchDocument> searchCache = new HashMap<>();
 
     public List<CachedItemStack> filter(List<CachedItemStack> source, TileEntityStorageTerminal.SortingTypes sortType,
-        TileEntityStorageTerminal.SortDirection sortDirection, String searchText, EntityPlayer player) {
+        SortDirection sortDirection, String searchText, EntityPlayer player) {
         String text = searchText == null ? "" : searchText;
         boolean modSearch = text.startsWith("@");
         Pattern pattern = compilePattern(modSearch ? text.substring(1) : text);
@@ -44,8 +47,8 @@ public final class TerminalSearch {
         for (CachedItemStack stack : result) {
             names.put(stack, stack.displayName());
         }
-        boolean byName = sortType == TileEntityStorageTerminal.SortingTypes.NAME;
-        boolean reversed = sortDirection == TileEntityStorageTerminal.SortDirection.DESCENDING;
+        boolean byName = sortType == SortingTypes.NAME;
+        boolean reversed = sortDirection == SortDirection.DESCENDING;
         Comparator<CachedItemStack> cmp = byName ? Comparator.comparing(names::get)
             : Comparator.comparingLong(CachedItemStack::count)
                 .reversed()

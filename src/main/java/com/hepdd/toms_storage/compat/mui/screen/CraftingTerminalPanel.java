@@ -53,7 +53,6 @@ public class CraftingTerminalPanel extends StorageTerminalPanel {
             craftingTile::setCraftToStorage);
         craftMode.allowC2S(true);
         sync.syncValue("craft_to_storage", 3, craftMode);
-        // Same two-state layout as the sort direction button, one row further down the sheet.
         child(new ButtonWidget<>().onMousePressed(mouseButton -> {
             craftMode.setBoolValue(!craftMode.getBoolValue(), true, true);
             return true;

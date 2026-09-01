@@ -31,10 +31,6 @@ public final class StorageUtils {
     /**
      * Resolves a neighbouring tile to an item handler: its IItemHandler capability if it has one, otherwise a
      * sided wrapper over its IInventory. Null when the tile is neither.
-     *
-     * <p>
-     * Capabilities.getCapability tries a direct cast before consulting CapabilityProvider, so a tile that
-     * simply implements IItemHandler is picked up without being a CapabilityProvider.
      */
     public static IItemHandler asHandler(TileEntity tile, ForgeDirection side) {
         if (tile == null) return null;
@@ -43,7 +39,6 @@ public final class StorageUtils {
         return tile instanceof IInventory inventory ? new SidedInvWrapper(inventory, side) : null;
     }
 
-    /** Aggregates every slot into de-duplicated {@link CachedItemStack}s (identity + summed count). */
     public static List<CachedItemStack> aggregate(IItemHandler inventory) {
         Map<CachedItemStack, Long> totals = new HashMap<>();
         for (int i = 0; i < inventory.getSlots(); i++) {
@@ -112,18 +107,10 @@ public final class StorageUtils {
         return result;
     }
 
-    /** The network's contents index, or null for a plain inventory that has to be walked. */
     private static NetworkItemIndex indexOf(IItemHandler inventory) {
-        return inventory instanceof NetworkItemHandler ? ((NetworkItemHandler) inventory).getIndex() : null;
+        return inventory instanceof NetworkItemHandler itemHandler ? itemHandler.getIndex() : null;
     }
 
-    /**
-     * The index says where to look; the member's own insertItem still decides what it accepts.
-     *
-     * <p>
-     * Slot lists do not move while this runs: the host defers write notifications, so a slot that stopped
-     * matching mid-operation simply refuses and the loop moves on.
-     */
     private static ItemStack insertIndexed(IItemHandler inventory, NetworkItemIndex index, ItemStack stack,
         boolean simulate) {
         ItemStack remainder = stack.copy();
@@ -133,9 +120,6 @@ public final class StorageUtils {
             remainder = inventory.insertItem(matching.getInt(i), remainder, simulate);
         }
 
-        // Ascending, so a new item fills the lowest empty slot - the order a plain slot walk produced.
-        // Writes are deferred, so the bit for a slot we just filled is still set; stepping past it by
-        // slot + 1 is what advances the loop.
         for (int slot = index.nextEmptySlot(0); slot >= 0 && remainder != null; slot = index.nextEmptySlot(slot + 1)) {
             remainder = inventory.insertItem(slot, remainder, simulate);
         }
@@ -152,7 +136,6 @@ public final class StorageUtils {
         for (int i = 0; i < slots.size() && remaining > 0; i++) {
             ItemStack extracted = inventory.extractItem(slots.getInt(i), remaining, simulate);
             if (extracted == null) continue;
-            // What the caller receives is what the inventory actually returned, never what the index claimed.
             if (result == null) {
                 result = extracted;
             } else {

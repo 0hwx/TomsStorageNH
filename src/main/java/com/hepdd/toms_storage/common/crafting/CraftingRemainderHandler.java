@@ -30,10 +30,6 @@ public final class CraftingRemainderHandler {
         return container.copy();
     }
 
-    /**
-     * True when using this ingredient destroys what it would otherwise give back, which is the case
-     * {@link #getRemainder}
-     */
     public static boolean containerBreaks(ItemStack ingredient) {
         if (ingredient == null) return false;
         if (isGTTool(ingredient)) {

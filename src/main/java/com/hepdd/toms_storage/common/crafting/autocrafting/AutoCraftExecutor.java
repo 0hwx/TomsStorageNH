@@ -11,22 +11,12 @@ import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.utils.StorageUtils;
 
-/**
- * Turns a planned auto-craft into real item movement, all of it or none of it.
- *
- * <p>
- * Nothing is written back to the network until every extraction the plan needs has succeeded. Sub-craft
- * outputs and leftovers are held in a local buffer rather than round-tripped through storage, so a plan
- * that fails halfway leaves no trace: the buffer is discarded and the real takes are handed back.
- */
 public final class AutoCraftExecutor {
 
     private final TileEntityStorageTerminal terminal;
     private final EntityPlayerMP player;
 
-    /** Items produced by the plan and still owed to a later operation, or to the player at the end. */
     private final List<ItemStack> buffer = new ArrayList<>();
-    /** Real takes, kept so a failure can put them back exactly where they came from. */
     private final List<ItemStack> takenFromNetwork = new ArrayList<>();
     private final List<ItemStack> takenFromPlayer = new ArrayList<>();
     private final List<ItemStack> finalOutputs = new ArrayList<>();
@@ -88,17 +78,13 @@ public final class AutoCraftExecutor {
 
     private ItemStack take(Extraction extraction) {
         ItemStack wanted = extraction.getStack();
-        switch (extraction.getSource()) {
-            case NETWORK:
-                return TerminalNetworkService.pull(terminal, wanted, wanted.stackSize);
-            case PLAYER:
-                return player.inventory.decrStackSize(extraction.getPlayerSlot(), wanted.stackSize);
-            default:
-                return takeFromBuffer(wanted);
-        }
+        return switch (extraction.getSource()) {
+            case NETWORK -> TerminalNetworkService.pull(terminal, wanted, wanted.stackSize);
+            case PLAYER -> player.inventory.decrStackSize(extraction.getPlayerSlot(), wanted.stackSize);
+            default -> takeFromBuffer(wanted);
+        };
     }
 
-    /** Only real takes are recorded; a buffer take was never anyone else's item to begin with. */
     private void record(Extraction.Source source, ItemStack actual) {
         if (source == Extraction.Source.NETWORK) takenFromNetwork.add(actual.copy());
         else if (source == Extraction.Source.PLAYER) takenFromPlayer.add(actual.copy());
@@ -117,7 +103,6 @@ public final class AutoCraftExecutor {
         else addToBuffer(output);
     }
 
-    /** Everything survived: the player gets what they asked for, the rest goes to storage. */
     private void commit() {
         for (ItemStack output : finalOutputs) {
             if (!player.inventory.addItemStackToInventory(output)) TerminalNetworkService.pushOrDrop(terminal, output);
@@ -163,13 +148,10 @@ public final class AutoCraftExecutor {
     }
 
     private static String reasonFor(Extraction.Source source) {
-        switch (source) {
-            case PLAYER:
-                return "apply_missing_player_item";
-            case INTERMEDIATE:
-                return "apply_missing_intermediate";
-            default:
-                return "apply_missing_terminal_item";
-        }
+        return switch (source) {
+            case PLAYER -> "apply_missing_player_item";
+            case INTERMEDIATE -> "apply_missing_intermediate";
+            default -> "apply_missing_terminal_item";
+        };
     }
 }

@@ -14,7 +14,6 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
     private final IInventory inventory;
     private final ForgeDirection side;
 
-    // Cached for the lifetime of a NetworkGraph. Null means "query live" for ad-hoc wrappers.
     private boolean[] accessibleMask;
 
     public SidedInvWrapper(IInventory inventory, ForgeDirection side) {
@@ -26,10 +25,8 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
         return inventory;
     }
 
-    /** Snapshots which slots this side can reach. Called once per graph build. */
     public void cacheAccessibleSlots() {
-        if (!(inventory instanceof ISidedInventory)) return;
-        ISidedInventory sided = (ISidedInventory) inventory;
+        if (!(inventory instanceof ISidedInventory sided)) return;
         int size = inventory.getSizeInventory();
         boolean[] mask = new boolean[size];
         int[] accessible = sided.getAccessibleSlotsFromSide(side.ordinal());
@@ -46,13 +43,9 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
         return inventory.getSizeInventory();
     }
 
-    // Hides slots this side cannot reach, so the terminal never shows contents it would refuse to extract
-    // (a furnace touched on its side exposes only the fuel slot; from below, fuel and output).
-    // Gated on accessibility, NOT canExtract: a fuel slot is reachable but not extractable, and insertStacked
-    // finds existing stacks to merge into through this method.
     @Override
     public ItemStack getStackInSlot(int slot) {
-        if (!isSlotInRange(slot)) return null;
+        if (isSlotInRange(slot)) return null;
         if (inventory instanceof ISidedInventory sided && !isSlotAccessible(sided, slot)) return null;
         return inventory.getStackInSlot(slot);
     }
@@ -113,25 +106,23 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, ItemStack stack) {
-        if (!isSlotInRange(slot)) return;
+        if (isSlotInRange(slot)) return;
         inventory.setInventorySlotContents(slot, stack);
         inventory.markDirty();
     }
 
     private boolean canInsert(int slot, ItemStack stack) {
-        if (!isSlotInRange(slot)) return false;
+        if (isSlotInRange(slot)) return false;
         if (!inventory.isItemValidForSlot(slot, stack)) return false;
-        if (inventory instanceof ISidedInventory) {
-            ISidedInventory sided = (ISidedInventory) inventory;
+        if (inventory instanceof ISidedInventory sided) {
             return isSlotAccessible(sided, slot) && sided.canInsertItem(slot, stack, side.ordinal());
         }
         return true;
     }
 
     private boolean canExtract(int slot) {
-        if (!isSlotInRange(slot)) return false;
-        if (inventory instanceof ISidedInventory) {
-            ISidedInventory sided = (ISidedInventory) inventory;
+        if (isSlotInRange(slot)) return false;
+        if (inventory instanceof ISidedInventory sided) {
             ItemStack stack = inventory.getStackInSlot(slot);
             return stack != null && isSlotAccessible(sided, slot) && sided.canExtractItem(slot, stack, side.ordinal());
         }
@@ -139,7 +130,7 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
     }
 
     private boolean isSlotInRange(int slot) {
-        return slot >= 0 && slot < inventory.getSizeInventory();
+        return slot < 0 || slot >= inventory.getSizeInventory();
     }
 
     private boolean isSlotAccessible(ISidedInventory sided, int slot) {

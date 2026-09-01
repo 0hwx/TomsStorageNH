@@ -73,8 +73,6 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
             Integer.MAX_VALUE) : 0;
     }
 
-    // Display icon for a grid cell, derived live from clientList (+ scroll). The slot reads through to this
-    // instead of a cached view handler, so the display can't go stale if MUI blanks the view on re-init.
     public ItemStack getCellIcon(int cell) {
         int index = scroll * COLUMNS + cell;
         return index >= 0 && index < clientList.size() ? clientList.get(index)
@@ -94,8 +92,6 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
         return items;
     }
 
-    // Raw client-side snapshot with true counts. clientNetworkItems() caps sizes at 64 for NEI presence
-    // dots; the auto-craft preview needs the real amounts.
     public List<CachedItemStack> clientCachedItems() {
         return Collections.unmodifiableList(clientList);
     }
@@ -121,8 +117,6 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
         });
     }
 
-    // NEI recipe transfer: client asks the server (over the grid's own C2S channel) to fill the crafting matrix
-    // with these 9 slot targets. Server pulls them via the same TerminalNetworkService.pull the grid clicks use.
     public void requestFill(ItemStack[] targets) {
         syncToServer(ID_FILL, buffer -> {
             for (int i = 0; i < 9; i++) {
@@ -133,13 +127,10 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
         });
     }
 
-    // NEI auto-craft: the serialised recipe rides the grid's own C2S channel, the same transport
-    // requestFill uses, so the crafting terminal has exactly one client-to-server path.
     public void requestAutoCraft(NBTTagCompound recipeTag) {
         syncToServer(ID_AUTOCRAFT, buffer -> buffer.writeNBTTagCompoundToBuffer(recipeTag));
     }
 
-    // Clear-grid button: return the crafting matrix to the network.
     public void requestClearGrid() {
         syncToServer(ID_CLEAR, buffer -> {});
     }
@@ -173,7 +164,7 @@ public class TerminalGridSyncHandler extends SyncHandler<TerminalGridSyncHandler
     }
 
     @Override
-    public void readOnClient(int id, PacketBuffer buf) throws IOException {
+    public void readOnClient(int id, PacketBuffer buf) {
         if (id != ID_LIST) return;
         int size = buf.readVarIntFromBuffer();
         List<CachedItemStack> list = new ArrayList<>(size);

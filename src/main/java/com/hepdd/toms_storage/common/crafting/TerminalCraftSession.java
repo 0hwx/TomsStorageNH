@@ -13,10 +13,6 @@ import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 
-/**
- * One Crafting Terminal's craft cycle: pay for the recipe out of the network, return what it gives back,
- * and bound how much a single shift-click may produce.
- */
 public final class TerminalCraftSession {
 
     private final TileEntityStorageTerminal terminal;
@@ -44,13 +40,6 @@ public final class TerminalCraftSession {
         bounded = false;
     }
 
-    /**
-     * How many crafts this click may run, decided before any of them happen - AE2's
-     * {@code floor(maxStackSize / howManyPerCraft)}. A recipe yielding 3 gets 21 crafts, so it stops at 63
-     * rather than overshooting a stack.
-     * 
-     * @param output what one craft produces, or null when the grid holds no recipe
-     */
     public int plannedCrafts(ItemStack output) {
         if (output == null) return 0;
         if (!bounded) return Integer.MAX_VALUE;
@@ -61,15 +50,6 @@ public final class TerminalCraftSession {
         return bounded && perCraft > 0 && crafted + perCraft > stackLimit;
     }
 
-    /**
-     * Runs one craft: fires the crafting event, pays for every filled slot out of the network, and puts
-     * back whatever the recipe returns.
-     * <p>
-     * Server only, and it never half-executes: a null return means nothing was consumed. The caller owns
-     * the output - the storage path pushes it, the player path had MUI move it before we got here.
-     *
-     * @return what this craft produced, or null when the grid holds no recipe
-     */
     public ItemStack craftOnce(InventoryCraftingWrapper matrix, EntityPlayer player) {
         if (player.worldObj.isRemote) return null;
         ItemStack output = CraftingManager.getInstance()
@@ -92,10 +72,6 @@ public final class TerminalCraftSession {
         return matrix.getSizeInventory() - 1;
     }
 
-    /**
-     * Takes one of this ingredient from the network. Only when the network cannot supply it does the grid
-     * slot itself pay
-     */
     private void consumeOne(InventoryCraftingWrapper matrix, int slot, ItemStack ingredient, EntityPlayer player) {
         ItemStack consumed = ingredient.copy();
         consumed.stackSize = 1;

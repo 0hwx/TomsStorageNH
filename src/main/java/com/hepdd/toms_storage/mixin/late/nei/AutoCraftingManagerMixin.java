@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
@@ -26,6 +27,7 @@ public abstract class AutoCraftingManagerMixin {
     @Inject(method = "getInventoryItems", at = @At("RETURN"))
     private static void tomsstorage$getInventoryItems(GuiContainer guiContainer,
         CallbackInfoReturnable<ItemStackAmount> cir) {
+        if (!TomsConfig.neiAutocrafting) return;
         if (!(guiContainer.inventorySlots instanceof CraftingTerminalContainer container)) return;
 
         TerminalGridSyncHandler grid = NeiCompat.grid(container);

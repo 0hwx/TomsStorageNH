@@ -6,10 +6,6 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
-/**
- * A finished plan: the operations to run, in order. Sub-crafts come before whatever consumes them, so an
- * executor can walk the list once.
- */
 public final class CraftingPlan {
 
     private final List<CraftOperation> operations = new ArrayList<>();
@@ -26,10 +22,6 @@ public final class CraftingPlan {
         return Collections.unmodifiableList(operations);
     }
 
-    /**
-     * One recipe run {@code times} over. The extractions already carry the multiplied amounts, so a batch
-     * costs the executor the same work as a single craft.
-     */
     public static final class CraftOperation {
 
         private final Extraction[] extractions;
@@ -48,7 +40,6 @@ public final class CraftingPlan {
             return extractions;
         }
 
-        /** What one run produces. Multiply by {@link #getTimes()} for the operation's whole yield. */
         public ItemStack getOutput() {
             return output == null ? null : output.copy();
         }

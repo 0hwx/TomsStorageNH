@@ -10,7 +10,6 @@ import com.hepdd.toms_storage.compat.mui.screen.CraftingTerminalPanel;
 
 public class TileEntityCraftingTerminal extends TileEntityStorageTerminal {
 
-    // When true, taking the crafting result pushes it into the network instead of the cursor/inventory.
     private boolean craftToStorage;
 
     @Override

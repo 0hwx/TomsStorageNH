@@ -11,9 +11,12 @@ import com.cleanroommc.modularui.utils.item.IItemHandlerModifiable;
 import com.cleanroommc.modularui.widgets.slot.InventoryCraftingWrapper;
 import com.cleanroommc.modularui.widgets.slot.ModularCraftingSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.crafting.TerminalCraftSession;
+import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftExecutor;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftRequest;
+import com.hepdd.toms_storage.common.crafting.autocrafting.CraftOutcome;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
@@ -38,10 +41,6 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
         this.craftSession = new TerminalCraftSession(terminal);
     }
 
-    public IItemHandlerModifiable getCraftingInventory() {
-        return craftingInventory;
-    }
-
     public TerminalCraftSession getCraftSession() {
         return craftSession;
     }
@@ -50,13 +49,14 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
         return autoCraftPreview;
     }
 
-    // Server side, driven by TerminalGridSyncHandler's ID_AUTOCRAFT.
     public void runAutoCraft(NBTTagCompound recipeTag) {
+        if (!TomsConfig.neiAutocrafting) return;
         if (!(getSyncManager().getPlayer() instanceof EntityPlayerMP serverPlayer)) return;
         AutoCraftRequest request = AutoCraftRequest.fromNbt(recipeTag, true, true);
         ItemStack output = request.getOutput();
         if (output == null || output.stackSize <= 0) return;
-        AutoCraftExecutor.execute(request, serverPlayer, terminal);
+        CraftOutcome outcome = AutoCraftExecutor.execute(request, serverPlayer, terminal);
+        if (!outcome.isSuccess()) AutoCraftDebug.log("autocraft failed: " + outcome.getReason());
         serverPlayer.inventory.markDirty();
     }
 
@@ -81,8 +81,6 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
     @Override
     public void onCraftMatrixChanged(IInventory inventory) {
         if (getGuiData().isClient()) return;
-        // Blanking the result is what stops MUI's quick-move loop: it only repeats while the result slot
-        // still holds something that stacks with what it just moved.
         this.craftingSlot.updateResult(
             craftSession.isSpent() ? null
                 : CraftingManager.getInstance()
@@ -95,18 +93,15 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
             && getModularSlot(slotId) instanceof ModularCraftingSlot;
         if (!onResult) return super.slotClick(slotId, mouseButton, mode, player);
 
-        // In craft-to-storage mode, clicking the result crafts straight into the network (shift = craft all).
         if (terminal.isCraftToStorage()) {
             if (!player.worldObj.isRemote) craftIntoStorage(player, mode == 1);
             return null;
         }
-        // Craft-to-inventory runs MUI's own quick-move loop, so the budget has to span the whole click.
         craftSession.begin(mode == 1);
         try {
             return super.slotClick(slotId, mouseButton, mode, player);
         } finally {
             craftSession.end();
-            // The burst may have blanked the result to break the loop; restore it now the click is over.
             if (!player.worldObj.isRemote) onCraftMatrixChanged(inventoryCrafting);
         }
     }
@@ -173,10 +168,6 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
         return result;
     }
 
-    /**
-     * We drive this loop ourselves, so the craft count is settled up front the way AE2 does it rather than
-     * re-tested after every craft. The guard still caps an unbounded craft-all.
-     */
     private void craftIntoStorage(EntityPlayer player, boolean craftAll) {
         craftSession.begin(craftAll);
         int planned = craftAll ? Math.min(

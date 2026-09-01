@@ -6,7 +6,7 @@ import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 import com.hepdd.toms_storage.common.crafting.ShiftCraftLimit;
 
-@Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID, category = "general")
+@Config(modid = TomsStorage.MODID, filename = TomsStorage.MODID)
 public class TomsConfig {
 
     @Config.Comment("Inventory Connector scan range.")
@@ -22,6 +22,11 @@ public class TomsConfig {
     @Config.Comment("Only allow trims to connect inventories.")
     @Config.DefaultBoolean(false)
     public static boolean onlyTrimsConnect;
+
+    @Config.Comment("Allow NEI bookmark autocrafting.")
+    @Config.DefaultBoolean(true)
+    @Config.Sync
+    public static boolean neiAutocrafting;
 
     @Config.Comment("Log NEI autocrafting integration debug output.")
     @Config.DefaultBoolean(false)

@@ -65,11 +65,11 @@ public class ItemWirelessTerminal extends Item {
 
         if (!world.isRemote) {
             if (player.isSneaking()) {
-                bind(stack, world, x, y, z, tile);
+                bind(stack, world, x, y, z);
                 player.addChatMessage(
                     new ChatComponentTranslation("message.tomsstorage.wireless_terminal.bound", x, y, z));
             } else {
-                openTarget(world, player, x, y, z, tile);
+                openTarget(player, x, y, z, tile);
             }
         }
         return true;
@@ -88,7 +88,7 @@ public class ItemWirelessTerminal extends Item {
         MovingObjectPosition hit = getMovingObjectPositionFromPlayer(world, player, true);
         if (hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
             TileEntity tile = world.getTileEntity(hit.blockX, hit.blockY, hit.blockZ);
-            if (isTerminal(tile)) openTarget(world, player, hit.blockX, hit.blockY, hit.blockZ, tile);
+            if (isTerminal(tile)) openTarget(player, hit.blockX, hit.blockY, hit.blockZ, tile);
         } else {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.unbound"));
         }
@@ -107,7 +107,7 @@ public class ItemWirelessTerminal extends Item {
         return tile instanceof TileEntityStorageTerminal;
     }
 
-    private void bind(ItemStack stack, World world, int x, int y, int z, TileEntity tile) {
+    private void bind(ItemStack stack, World world, int x, int y, int z) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
@@ -147,7 +147,7 @@ public class ItemWirelessTerminal extends Item {
         openTerminal(player, tile);
     }
 
-    private void openTarget(World world, EntityPlayer player, int x, int y, int z, TileEntity tile) {
+    private void openTarget(EntityPlayer player, int x, int y, int z, TileEntity tile) {
         if (player.getDistanceSq(x + 0.5D, y + 0.5D, z + 0.5D) > TomsConfig.wirelessReach * TomsConfig.wirelessReach) {
             player.addChatMessage(new ChatComponentTranslation("message.tomsstorage.wireless_terminal.too_far"));
             return;
@@ -155,7 +155,6 @@ public class ItemWirelessTerminal extends Item {
         openTerminal(player, tile);
     }
 
-    // TileEntityCraftingTerminal extends TileEntityStorageTerminal, so one branch covers both.
     private void openTerminal(EntityPlayer player, TileEntity tile) {
         if (tile instanceof TileEntityStorageTerminal terminal) {
             TerminalGuiFactory.INSTANCE.open(player, terminal);

@@ -30,7 +30,6 @@ public class TerminalSearchField extends TextFieldWidget {
         if (neiSearch == null) return;
 
         if (originalNeiSearch == null) {
-            // First tick with sync on: adopt NEI's text if we have none, otherwise push ours to NEI.
             originalNeiSearch = neiSearch;
             String terminalSearch = getText();
             if (terminalSearch.isEmpty() && !neiSearch.isEmpty()) {

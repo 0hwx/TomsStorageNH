@@ -39,6 +39,7 @@ public class BlockInventoryCable extends Block implements IBlockModelProvider {
     public BlockInventoryCable() {
         super(Material.wood);
         setBlockName("tomsstorage.inventory_cable");
+        setBlockTextureName("tomsstorage:inventory_cable");
         setHardness(1.5F);
         setResistance(3.0F);
         setBlockBounds(MIN, MIN, MIN, MAX, MAX, MAX);

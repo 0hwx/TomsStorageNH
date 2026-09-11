@@ -31,6 +31,7 @@ public class BlockInventoryConnector extends BlockContainer {
     public BlockInventoryConnector() {
         super(Material.wood);
         setBlockName("tomsstorage.inventory_connector");
+        setBlockTextureName("tomsstorage:inventory_connector");
         setHardness(3.0F);
         setResistance(5.0F);
     }

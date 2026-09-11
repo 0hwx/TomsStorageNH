@@ -20,6 +20,7 @@ public class BlockTrim extends Block {
     public BlockTrim() {
         super(Material.wood);
         setBlockName("tomsstorage.trim");
+        setBlockTextureName("tomsstorage:trim");
         setHardness(3.0F);
         setResistance(5.0F);
     }

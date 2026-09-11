@@ -45,7 +45,7 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
 
     @Override
     public ItemStack getStackInSlot(int slot) {
-        if (isSlotInRange(slot)) return null;
+        if (!isSlotInRange(slot)) return null;
         if (inventory instanceof ISidedInventory sided && !isSlotAccessible(sided, slot)) return null;
         return inventory.getStackInSlot(slot);
     }
@@ -106,13 +106,13 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, ItemStack stack) {
-        if (isSlotInRange(slot)) return;
+        if (!isSlotInRange(slot)) return;
         inventory.setInventorySlotContents(slot, stack);
         inventory.markDirty();
     }
 
     private boolean canInsert(int slot, ItemStack stack) {
-        if (isSlotInRange(slot)) return false;
+        if (!isSlotInRange(slot)) return false;
         if (!inventory.isItemValidForSlot(slot, stack)) return false;
         if (inventory instanceof ISidedInventory sided) {
             return isSlotAccessible(sided, slot) && sided.canInsertItem(slot, stack, side.ordinal());
@@ -121,7 +121,7 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
     }
 
     private boolean canExtract(int slot) {
-        if (isSlotInRange(slot)) return false;
+        if (!isSlotInRange(slot)) return false;
         if (inventory instanceof ISidedInventory sided) {
             ItemStack stack = inventory.getStackInSlot(slot);
             return stack != null && isSlotAccessible(sided, slot) && sided.canExtractItem(slot, stack, side.ordinal());
@@ -130,7 +130,7 @@ public class SidedInvWrapper implements IItemHandlerModifiable {
     }
 
     private boolean isSlotInRange(int slot) {
-        return slot < 0 || slot >= inventory.getSizeInventory();
+        return slot >= 0 && slot < inventory.getSizeInventory();
     }
 
     private boolean isSlotAccessible(ISidedInventory sided, int slot) {

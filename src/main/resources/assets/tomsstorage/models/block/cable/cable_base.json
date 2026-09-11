@@ -1,6 +1,6 @@
 {
-    "textures": {
-        "particle": "tomsstorage:block/inventory_cable"
-    },
-    "parent": "block/block"
+  "parent": "block/block",
+  "textures": {
+    "particle": "tomsstorage:blocks/inventory_cable"
+  }
 }

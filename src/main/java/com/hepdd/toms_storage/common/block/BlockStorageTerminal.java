@@ -75,6 +75,7 @@ public class BlockStorageTerminal extends BlockContainer {
     public BlockStorageTerminal() {
         super(Material.wood);
         setBlockName("tomsstorage.storage_terminal");
+        setBlockTextureName("tomsstorage:inventory_block");
         setHardness(3.0F);
         setResistance(5.0F);
     }

@@ -1,6 +1,6 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "tomsstorage:block/trim"
+      "all": "tomsstorage:blocks/trim"
 	}
 }

@@ -3,11 +3,11 @@
   "credit": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
   "parent": "block/block",
   "textures": {
-    "0": "tomsstorage:block/inventory_block",
-    "1": "tomsstorage:block/terminal_side",
-    "2": "tomsstorage:block/terminal_front",
-    "3": "tomsstorage:block/terminal_top",
-    "particle": "tomsstorage:block/inventory_block"
+    "0": "tomsstorage:blocks/inventory_block",
+    "1": "tomsstorage:blocks/terminal_side",
+    "2": "tomsstorage:blocks/terminal_front",
+    "3": "tomsstorage:blocks/terminal_top",
+    "particle": "tomsstorage:blocks/inventory_block"
   },
   "elements": [
     {

@@ -1,6 +1,6 @@
 {
     "textures": {
-        "0": "tomsstorage:block/inventory_cable"
+      "0": "tomsstorage:blocks/inventory_cable"
     },
     "elements": [
         {

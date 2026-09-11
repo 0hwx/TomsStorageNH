@@ -26,6 +26,7 @@ public class BlockInventoryHopper extends BlockContainer {
     public BlockInventoryHopper() {
         super(Material.wood);
         setBlockName("tomsstorage.inventory_hopper");
+        setBlockTextureName("tomsstorage:inventory_hopper_basic");
         setHardness(2.5F);
         setResistance(4.0F);
     }

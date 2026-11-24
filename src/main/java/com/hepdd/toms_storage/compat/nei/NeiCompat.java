@@ -1,12 +1,20 @@
 package com.hepdd.toms_storage.compat.nei;
 
+import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 
 import org.lwjgl.opengl.GL11;
 
@@ -21,15 +29,22 @@ import com.hepdd.toms_storage.common.crafting.autocrafting.CraftingPattern;
 import com.hepdd.toms_storage.common.crafting.autocrafting.RecipeNbtSerializer;
 import com.hepdd.toms_storage.compat.mui.container.CraftingTerminalContainer;
 import com.hepdd.toms_storage.compat.mui.sync.TerminalGridSyncHandler;
+import com.hepdd.toms_storage.mixin.late.nei.AutoCraftingManagerAccessor;
 
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.NEIServerUtils;
 import codechicken.nei.PositionedStack;
+import codechicken.nei.bookmark.BookmarkItem;
 import codechicken.nei.guihook.GuiContainerManager;
+import codechicken.nei.recipe.AutoCraftingManager;
 import codechicken.nei.recipe.GuiOverlayButton;
 import codechicken.nei.recipe.IRecipeHandler;
+import codechicken.nei.recipe.Recipe;
+import codechicken.nei.recipe.Recipe.RecipeId;
+import codechicken.nei.recipe.RecipeHandlerRef;
+import codechicken.nei.recipe.chain.RecipeChainMath;
 
 // Use MUI2 Integration with nei
 public final class NeiCompat {
@@ -37,6 +52,7 @@ public final class NeiCompat {
     private static final int GRID_X = 25;
     private static final int GRID_Y = 6;
     private static final int SLOT = 18;
+    private static final int RECIPE_PACKET_BUDGET = 16 * 1024 - 512;
 
     private static final ItemStack[] GHOSTS = new ItemStack[9];
 
@@ -125,42 +141,83 @@ public final class NeiCompat {
         if (!TomsConfig.neiAutocrafting) return false;
         TerminalGridSyncHandler grid = grid(container);
         if (grid == null) return false;
+        AutoCraftPreviewInventory preview = container.getAutoCraftPreview();
+        if (preview.isWaitingForServer()) return false;
 
         ItemStack output = getRecipeOutput(recipe, recipeIndex);
         if (output == null) return false;
 
         int count = Math.max(1, multiplier);
+        ItemStack[][] mapped = mapIngredients(recipe, recipeIndex);
+        if (mapped == null) return false;
+
+        NBTTagCompound recipeTag = RecipeNbtSerializer.writeRecipe(mapped, output, count);
+        int requestId = nextAutoCraftRequestId++;
+        boolean previewed = preview.applyRequest(
+            requestId,
+            grid.clientCachedItems(),
+            gui.mc.thePlayer.inventory,
+            RecipeNbtSerializer.readIngredients(recipeTag),
+            output,
+            count);
+        if (!previewed && AutoCraftingManager.processing()) addBookmarkDependencies(recipeTag, recipe, recipeIndex);
+        grid.requestAutoCraft(requestId, recipeTag);
+        // NEI repeats immediately while this returns true.
+        return previewed;
+    }
+
+    private static ItemStack[][] mapIngredients(IRecipeHandler recipe, int recipeIndex) {
         ItemStack[][] mapped = new ItemStack[CraftingPattern.GRID_SIZE][];
         Arrays.fill(mapped, new ItemStack[0]);
         for (PositionedStack ingredient : recipe.getIngredientStacks(recipeIndex)) {
             int index = matrixIndex(ingredient);
-            if (index < 0) return false;
+            if (index < 0) return null;
             mapped[index] = ingredient.items;
         }
+        return mapped;
+    }
 
-        NBTTagCompound recipeTag = RecipeNbtSerializer.writeRecipe(mapped, output, count);
-        RecipeNbtSerializer.setPatterns(
-            recipeTag,
-            container.getAutoCraftPreview()
-                .getPatterns());
+    private static void addBookmarkDependencies(NBTTagCompound recipeTag, IRecipeHandler handler, int recipeIndex) {
+        RecipeChainMath chain = AutoCraftingManagerAccessor.tomsstorage$getMath();
+        if (chain == null) return;
+        RecipeId root = Recipe.of(handler, recipeIndex)
+            .getRecipeId();
+        Set<RecipeId> visited = new HashSet<>();
+        visited.add(root);
+        Deque<RecipeId> pending = new ArrayDeque<>();
+        pending.add(root);
 
-        int requestId = nextAutoCraftRequestId++;
-        if (!container.getAutoCraftPreview()
-            .applyRequest(
-                requestId,
-                grid.clientCachedItems(),
-                gui.mc.thePlayer.inventory,
-                RecipeNbtSerializer.readIngredients(recipeTag),
-                output,
-                count)) {
-            AutoCraftDebug.log("craft abort: preview simulation failed");
+        NBTTagList dependencies = new NBTTagList();
+        recipeTag.setTag(RecipeNbtSerializer.DEPENDENCIES_TAG, dependencies);
+        while (!pending.isEmpty() && dependencies.tagCount() < RecipeNbtSerializer.MAX_DEPENDENCIES) {
+            RecipeId parent = pending.removeFirst();
+            for (Map.Entry<BookmarkItem, BookmarkItem> link : chain.preferredItems.entrySet()) {
+                RecipeId child = link.getValue().recipeId;
+                if (!parent.equals(link.getKey().recipeId) || child == null || !visited.add(child)) continue;
+
+                RecipeHandlerRef ref = RecipeHandlerRef.of(child);
+                if (ref == null) continue;
+                ItemStack output = getRecipeOutput(ref.handler, ref.recipeIndex);
+                ItemStack[][] ingredients = mapIngredients(ref.handler, ref.recipeIndex);
+                if (output == null || ingredients == null) continue;
+
+                dependencies.appendTag(RecipeNbtSerializer.writeRecipe(ingredients, output, 1));
+                if (!fitsRecipePacket(recipeTag)) {
+                    dependencies.removeTag(dependencies.tagCount() - 1);
+                    break;
+                }
+                pending.addLast(child);
+                if (dependencies.tagCount() >= RecipeNbtSerializer.MAX_DEPENDENCIES) break;
+            }
+        }
+    }
+
+    private static boolean fitsRecipePacket(NBTTagCompound recipeTag) {
+        try {
+            return CompressedStreamTools.compress(recipeTag).length <= RECIPE_PACKET_BUDGET;
+        } catch (IOException ignored) {
             return false;
         }
-        container.getAutoCraftPreview()
-            .rememberPattern(recipeTag);
-
-        grid.requestAutoCraft(recipeTag);
-        return true;
     }
 
     private static ItemStack getRecipeOutput(IRecipeHandler recipe, int recipeIndex) {

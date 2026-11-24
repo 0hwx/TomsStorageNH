@@ -19,6 +19,8 @@ public class TerminalSearchField extends TextFieldWidget {
 
     public TerminalSearchField(BooleanSupplier syncNei) {
         this.syncNei = syncNei;
+        setTextColor(0xFFFFFFFF);
+        renderer.setShadow(true);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class TerminalSearchField extends TextFieldWidget {
             originalNeiSearch = neiSearch;
             String terminalSearch = getText();
             if (terminalSearch.isEmpty() && !neiSearch.isEmpty()) {
-                setText(neiSearch);
+                applyNeiSearch(neiSearch);
                 terminalSearch = neiSearch;
             } else if (!terminalSearch.equals(neiSearch)) {
                 NeiSearchBridge.setSearch(terminalSearch);
@@ -49,10 +51,16 @@ public class TerminalSearchField extends TextFieldWidget {
             lastTerminalSearch = terminalSearch;
             lastNeiSearch = terminalSearch;
         } else if (!neiSearch.equals(lastNeiSearch)) {
-            setText(neiSearch);
+            applyNeiSearch(neiSearch);
             lastTerminalSearch = neiSearch;
             lastNeiSearch = neiSearch;
         }
+    }
+
+    private void applyNeiSearch(String text) {
+        setText(text);
+        handler.setCursor(0, text.length(), false);
+        handler.onChanged();
     }
 
     public static void restoreNeiSearch() {

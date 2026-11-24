@@ -7,7 +7,7 @@ public enum Mixins implements IMixins {
     // spotless:off
 
     NEI_AUTOCRAFTING(new MixinBuilder()
-            .addClientMixins("nei.AutoCraftingManagerMixin")
+            .addClientMixins("nei.AutoCraftingManagerMixin", "nei.AutoCraftingManagerAccessor")
             .addRequiredMod(TargetedMod.NEI)
             .setPhase(Phase.LATE)
     )

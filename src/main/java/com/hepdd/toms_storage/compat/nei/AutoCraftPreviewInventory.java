@@ -5,7 +5,6 @@ import java.util.List;
 
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 
 import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 import com.hepdd.toms_storage.common.crafting.CraftingStackMatcher;
@@ -17,30 +16,27 @@ public final class AutoCraftPreviewInventory {
 
     private List<CachedItemStack> stacks = new ArrayList<>();
     private List<ItemStack> playerStacks = new ArrayList<>();
-    private List<NBTTagCompound> patterns = new ArrayList<>();
     private int activeRequestId = -1;
+    private int unpreviewedRequestId = -1;
 
-    public List<CachedItemStack> getStacks(List<CachedItemStack> baseStacks) {
+    public synchronized List<CachedItemStack> getStacks(List<CachedItemStack> baseStacks) {
         return activeRequestId >= 0 ? copyStacks(stacks) : copyStacks(baseStacks);
     }
 
-    public boolean isActive() {
+    public synchronized boolean isActive() {
         return activeRequestId >= 0;
     }
 
-    public List<ItemStack> getPlayerStacks(InventoryPlayer inventory) {
+    public synchronized List<ItemStack> getPlayerStacks(InventoryPlayer inventory) {
         return activeRequestId >= 0 ? copyItems(playerStacks) : copyPlayerStacks(inventory);
     }
 
-    public void clear() {
-        stacks = new ArrayList<>();
-        playerStacks = new ArrayList<>();
-        patterns = new ArrayList<>();
-        activeRequestId = -1;
+    public synchronized boolean isWaitingForServer() {
+        return unpreviewedRequestId != -1;
     }
 
-    public boolean applyRequest(int requestId, List<CachedItemStack> baseStacks, InventoryPlayer playerInventory,
-        ItemStack[][] ingredients, ItemStack output, int count) {
+    public synchronized boolean applyRequest(int requestId, List<CachedItemStack> baseStacks,
+        InventoryPlayer playerInventory, ItemStack[][] ingredients, ItemStack output, int count) {
         List<CachedItemStack> preview = activeRequestId >= 0 ? copyStacks(stacks) : copyStacks(baseStacks);
         List<ItemStack> previewPlayer = activeRequestId >= 0 ? copyItems(playerStacks)
             : copyPlayerStacks(playerInventory);
@@ -50,6 +46,7 @@ public final class AutoCraftPreviewInventory {
                 if (candidates == null || candidates.length == 0) continue;
                 ItemStack consumed = consumeCandidate(preview, previewPlayer, candidates);
                 if (consumed == null) {
+                    unpreviewedRequestId = requestId;
                     AutoCraftDebug.log(
                         "preview failed request=" + requestId
                             + " slot="
@@ -73,23 +70,13 @@ public final class AutoCraftPreviewInventory {
         return true;
     }
 
-    public void rememberPattern(NBTTagCompound patternTag) {
-        if (patternTag == null) return;
-        NBTTagCompound copy = (NBTTagCompound) patternTag.copy();
-        copy.removeTag("patterns");
-        if (!patterns.contains(copy)) patterns.add(copy);
-    }
-
-    public List<NBTTagCompound> getPatterns() {
-        List<NBTTagCompound> copy = new ArrayList<>();
-        for (NBTTagCompound pattern : patterns) {
-            copy.add((NBTTagCompound) pattern.copy());
+    public synchronized void clearIfMatches(int requestId) {
+        if (unpreviewedRequestId == requestId) unpreviewedRequestId = -1;
+        if (activeRequestId == requestId) {
+            stacks.clear();
+            playerStacks.clear();
+            activeRequestId = -1;
         }
-        return copy;
-    }
-
-    public void clearIfMatches(int requestId) {
-        if (activeRequestId == requestId) clear();
     }
 
     private static ItemStack consumeCandidate(List<CachedItemStack> preview, List<ItemStack> previewPlayer,

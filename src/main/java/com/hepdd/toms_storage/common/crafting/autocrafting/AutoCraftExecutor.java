@@ -6,7 +6,6 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
-import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 import com.hepdd.toms_storage.utils.StorageUtils;
@@ -91,11 +90,7 @@ public final class AutoCraftExecutor {
     }
 
     private void produce(CraftingPlan.CraftOperation operation) {
-        for (Extraction extraction : operation.getExtractions()) {
-            if (extraction == null) continue;
-            ItemStack remainder = CraftingRemainderHandler.getRemainder(extraction.getStack());
-            if (remainder != null) addToBuffer(remainder);
-        }
+        for (ItemStack remainder : operation.getRemainders()) addToBuffer(remainder);
         ItemStack output = operation.getOutput();
         if (output == null) return;
         output.stackSize = Math.max(1, output.stackSize) * operation.getTimes();
@@ -105,7 +100,7 @@ public final class AutoCraftExecutor {
 
     private void commit() {
         for (ItemStack output : finalOutputs) {
-            if (!player.inventory.addItemStackToInventory(output)) TerminalNetworkService.pushOrDrop(terminal, output);
+            TerminalNetworkService.giveToPlayerOrStore(terminal, player, output);
         }
         for (ItemStack leftover : buffer) {
             TerminalNetworkService.pushOrDrop(terminal, leftover);
@@ -118,7 +113,7 @@ public final class AutoCraftExecutor {
             TerminalNetworkService.pushOrDrop(terminal, stack);
         }
         for (ItemStack stack : takenFromPlayer) {
-            if (!player.inventory.addItemStackToInventory(stack)) TerminalNetworkService.pushOrDrop(terminal, stack);
+            TerminalNetworkService.giveToPlayerOrStore(terminal, player, stack);
         }
         player.inventory.markDirty();
     }

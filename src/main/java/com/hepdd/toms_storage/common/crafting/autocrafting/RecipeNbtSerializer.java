@@ -1,6 +1,5 @@
 package com.hepdd.toms_storage.common.crafting.autocrafting;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
@@ -8,6 +7,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 public final class RecipeNbtSerializer {
+
+    public static final int MAX_DEPENDENCIES = 16;
+    public static final String DEPENDENCIES_TAG = "dependencies";
 
     public static NBTTagCompound writeRecipe(ItemStack[][] ingredients, ItemStack output, int count) {
         NBTTagCompound tag = createBaseRecipe(output, count);
@@ -19,19 +21,7 @@ public final class RecipeNbtSerializer {
                     writeCandidates(ingredients == null || i >= ingredients.length ? null : ingredients[i]));
         }
         tag.setTag("ingredients", slots);
-        NBTTagList patterns = new NBTTagList();
-        patterns.appendTag(copyRecipeWithoutPatterns(tag));
-        tag.setTag("patterns", patterns);
         return tag;
-    }
-
-    public static void setPatterns(NBTTagCompound recipeTag, List<NBTTagCompound> patternTags) {
-        NBTTagList patterns = new NBTTagList();
-        for (NBTTagCompound patternTag : patternTags) {
-            if (patternTag != null) patterns.appendTag(copyRecipeWithoutPatterns(patternTag));
-        }
-        patterns.appendTag(copyRecipeWithoutPatterns(recipeTag));
-        recipeTag.setTag("patterns", patterns);
     }
 
     public static ItemStack readOutput(NBTTagCompound recipeTag) {
@@ -64,23 +54,12 @@ public final class RecipeNbtSerializer {
         return new CraftingPattern(readOutput(recipeTag), readIngredients(recipeTag));
     }
 
-    public static List<CraftingPattern> readPatterns(NBTTagCompound recipeTag) {
-        List<CraftingPattern> patterns = new ArrayList<>();
-        if (recipeTag == null) return patterns;
-
-        NBTTagList patternTags = recipeTag.getTagList("patterns", 10);
-        for (int i = 0; i < patternTags.tagCount(); i++) {
-            CraftingPattern pattern = readPattern(patternTags.getCompoundTagAt(i));
+    static void addDependencies(NBTTagCompound recipeTag, List<CraftingPattern> patterns) {
+        NBTTagList dependencies = recipeTag.getTagList(DEPENDENCIES_TAG, 10);
+        for (int i = 0; i < Math.min(dependencies.tagCount(), MAX_DEPENDENCIES); i++) {
+            CraftingPattern pattern = readPattern(dependencies.getCompoundTagAt(i));
             if (pattern.getOutput() != null) patterns.add(pattern);
         }
-        if (patterns.isEmpty() && readOutput(recipeTag) != null) patterns.add(readPattern(recipeTag));
-        return patterns;
-    }
-
-    private static NBTTagCompound copyRecipeWithoutPatterns(NBTTagCompound recipeTag) {
-        NBTTagCompound copy = (NBTTagCompound) recipeTag.copy();
-        copy.removeTag("patterns");
-        return copy;
     }
 
     private static NBTTagCompound createBaseRecipe(ItemStack output, int count) {

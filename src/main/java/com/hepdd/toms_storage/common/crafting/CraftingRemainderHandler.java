@@ -1,67 +1,47 @@
 package com.hepdd.toms_storage.common.crafting;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 
 public final class CraftingRemainderHandler {
 
     public static ItemStack getRemainder(ItemStack ingredient) {
-        if (ingredient == null) return null;
+        return getRemainder(ingredient, null);
+    }
 
-        if (isGTTool(ingredient)) {
-            ItemStack tool = ingredient.copy();
-            incrementGTDamage(tool, 1);
-            return getGTDurability(tool) > 0 ? tool : null;
-        }
-
-        if (!ingredient.getItem()
-            .hasContainerItem(ingredient)) return null;
-        ItemStack container = ingredient.getItem()
-            .getContainerItem(ingredient);
+    public static ItemStack getRemainder(ItemStack ingredient, EntityPlayer player) {
+        ItemStack container = getContainerItem(ingredient);
         if (container == null) return null;
-
-        if (container.getItem() == ingredient.getItem()) {
-            if (!container.isItemStackDamageable() || container.getItemDamage() <= container.getMaxDamage()) {
-                return container.copy();
-            }
+        if (isBroken(container)) {
+            if (player != null) MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, ingredient));
             return null;
         }
-
-        return container.copy();
+        return container.stackSize > 0 ? container.copy() : null;
     }
 
-    public static boolean containerBreaks(ItemStack ingredient) {
-        if (ingredient == null) return false;
-        if (isGTTool(ingredient)) {
-            ItemStack tool = ingredient.copy();
-            incrementGTDamage(tool, 1);
-            return getGTDurability(tool) <= 0;
-        }
-        if (!ingredient.getItem()
-            .hasContainerItem(ingredient)) return false;
-        ItemStack container = ingredient.getItem()
-            .getContainerItem(ingredient);
-        return container != null && container.isItemStackDamageable()
-            && container.getItemDamage() > container.getMaxDamage();
+    public static boolean mayReturnRemainder(ItemStack ingredient) {
+        return ingredient != null && (isGTTool(ingredient) || ingredient.getItem()
+            .hasContainerItem(ingredient.copy()));
     }
 
-    public static boolean isGTTool(ItemStack stack) {
-        if (stack == null || !stack.hasTagCompound()) return false;
-        NBTTagCompound tag = stack.getTagCompound();
-        return tag != null && tag.hasKey("GT.ToolStats");
+    static boolean isGTTool(ItemStack stack) {
+        return stack.hasTagCompound() && stack.getTagCompound()
+            .hasKey("GT.ToolStats", 10);
     }
 
-    public static long getGTDurability(ItemStack stack) {
-        NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null || !tag.hasKey("GT.ToolStats")) return 0;
-        NBTTagCompound stats = tag.getCompoundTag("GT.ToolStats");
-        return stats.getLong("MaxDamage") - stats.getLong("Damage");
+    private static ItemStack getContainerItem(ItemStack ingredient) {
+        if (ingredient == null) return null;
+        ItemStack input = ingredient.copy();
+        return input.getItem()
+            .hasContainerItem(input)
+                ? input.getItem()
+                    .getContainerItem(input)
+                : null;
     }
 
-    public static void incrementGTDamage(ItemStack stack, int amount) {
-        NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null || !tag.hasKey("GT.ToolStats")) return;
-        NBTTagCompound stats = tag.getCompoundTag("GT.ToolStats");
-        stats.setLong("Damage", stats.getLong("Damage") + amount);
+    private static boolean isBroken(ItemStack container) {
+        return container.isItemStackDamageable() && container.getItemDamage() > container.getMaxDamage();
     }
 }

@@ -3,8 +3,6 @@ package com.hepdd.toms_storage.common.crafting;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 
 import com.cleanroommc.modularui.widgets.slot.InventoryCraftingWrapper;
 import com.hepdd.toms_storage.TomsConfig;
@@ -79,13 +77,8 @@ public final class TerminalCraftSession {
         boolean fromGrid = TerminalNetworkService.pull(terminal, consumed, 1) == null;
         if (fromGrid) matrix.decrStackSize(slot, 1, false);
 
-        ItemStack remainder = CraftingRemainderHandler.getRemainder(consumed);
-        if (remainder == null) {
-            if (CraftingRemainderHandler.containerBreaks(consumed)) {
-                MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, consumed));
-            }
-            return;
-        }
+        ItemStack remainder = CraftingRemainderHandler.getRemainder(consumed, player);
+        if (remainder == null) return;
         // A slot the fallback just emptied takes the leftover back, so a bucket stays where the recipe
         // wants it. Otherwise the grid is untouched and the leftover belongs in storage.
         if (fromGrid && matrix.getStackInSlot(slot) == null) matrix.setSlot(slot, remainder, false);

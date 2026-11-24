@@ -14,7 +14,10 @@ public final class CraftingStackMatcher {
             return false;
         }
 
-        if (OreDictionary.itemMatches(recipeItem, candidate, false)) return nbtMatches(recipeItem, candidate);
+        if (OreDictionary.itemMatches(recipeItem, candidate, false)) {
+            return nbtMatches(recipeItem, candidate)
+                || CraftingRemainderHandler.isGTTool(recipeItem) && CraftingRemainderHandler.isGTTool(candidate);
+        }
 
         if (recipeItem.getItem() == candidate.getItem()) {
             if (recipeItem.getItemDamage() == OreDictionary.WILDCARD_VALUE

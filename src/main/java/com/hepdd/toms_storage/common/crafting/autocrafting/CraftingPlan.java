@@ -10,8 +10,9 @@ public final class CraftingPlan {
 
     private final List<CraftOperation> operations = new ArrayList<>();
 
-    public void addOperation(Extraction[] extractions, ItemStack output, int times, boolean finalOutput) {
-        operations.add(new CraftOperation(extractions, output, times, finalOutput));
+    public void addOperation(Extraction[] extractions, List<ItemStack> remainders, ItemStack output, int times,
+        boolean finalOutput) {
+        operations.add(new CraftOperation(extractions, remainders, output, times, finalOutput));
     }
 
     public boolean isEmpty() {
@@ -25,12 +26,15 @@ public final class CraftingPlan {
     public static final class CraftOperation {
 
         private final Extraction[] extractions;
+        private final List<ItemStack> remainders;
         private final ItemStack output;
         private final int times;
         private final boolean finalOutput;
 
-        private CraftOperation(Extraction[] extractions, ItemStack output, int times, boolean finalOutput) {
+        private CraftOperation(Extraction[] extractions, List<ItemStack> remainders, ItemStack output, int times,
+            boolean finalOutput) {
             this.extractions = extractions;
+            this.remainders = remainders;
             this.output = output == null ? null : output.copy();
             this.times = Math.max(1, times);
             this.finalOutput = finalOutput;
@@ -38,6 +42,10 @@ public final class CraftingPlan {
 
         public Extraction[] getExtractions() {
             return extractions;
+        }
+
+        public List<ItemStack> getRemainders() {
+            return remainders;
         }
 
         public ItemStack getOutput() {

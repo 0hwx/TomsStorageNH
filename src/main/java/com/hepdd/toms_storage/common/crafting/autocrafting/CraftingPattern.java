@@ -52,11 +52,7 @@ public final class CraftingPattern {
     private static boolean anyRemainder(ItemStack[][] ingredients) {
         for (ItemStack[] candidates : ingredients) {
             for (ItemStack candidate : candidates) {
-                if (candidate == null) continue;
-                if (CraftingRemainderHandler.getRemainder(candidate) != null
-                    || CraftingRemainderHandler.containerBreaks(candidate)) {
-                    return true;
-                }
+                if (CraftingRemainderHandler.mayReturnRemainder(candidate)) return true;
             }
         }
         return false;

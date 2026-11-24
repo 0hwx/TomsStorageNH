@@ -32,8 +32,13 @@ public class ItemSlotTerminal extends ItemSlot {
     @Override
     public Interactable.Result onMousePressed(int mouseButton) {
         boolean shift = Interactable.hasShiftDown();
-        SlotAction action = mouseButton == 1 ? (shift ? SlotAction.PULL_ONE : SlotAction.GET_HALF)
-            : (shift ? SlotAction.SHIFT_PULL : SlotAction.PULL_OR_PUSH_STACK);
+        SlotAction action = switch (mouseButton) {
+            case 0 -> shift ? SlotAction.SHIFT_PULL : SlotAction.PULL_OR_PUSH_STACK;
+            case 1 -> shift ? SlotAction.PULL_ONE : SlotAction.GET_HALF;
+            default -> null;
+        };
+        if (action == null) return Interactable.Result.IGNORE;
+
         grid.click(index, action);
         return Interactable.Result.SUCCESS;
     }

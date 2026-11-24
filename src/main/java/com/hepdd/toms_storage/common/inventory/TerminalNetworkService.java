@@ -41,8 +41,9 @@ public final class TerminalNetworkService {
         }
     }
 
-    public static boolean giveToPlayer(EntityPlayerMP player, ItemStack stack) {
-        return player.inventory.addItemStackToInventory(stack);
+    public static void giveToPlayerOrStore(TileEntityStorageTerminal terminal, EntityPlayerMP player, ItemStack stack) {
+        player.inventory.addItemStackToInventory(stack);
+        if (stack.stackSize > 0) pushOrDrop(terminal, stack);
     }
 
     public static void depositAll(TileEntityStorageTerminal terminal, EntityPlayerMP player) {

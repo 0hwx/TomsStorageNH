@@ -18,13 +18,12 @@ import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.network.NetworkUtils;
 import com.cleanroommc.modularui.screen.ModularContainer;
 import com.cleanroommc.modularui.screen.ModularPanel;
-import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
 import com.cleanroommc.modularui.value.DoubleValue;
+import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
-import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.value.sync.SyncHandlers;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
@@ -56,7 +55,6 @@ public class StorageTerminalPanel extends ModularPanel {
     protected final String textureName;
 
     private TerminalSearchMode searchMode = TomsConfig.Client.terminalSearchMode;
-    private StringSyncValue searchValue;
     private final TerminalGridSyncHandler grid;
 
     public StorageTerminalPanel(TileEntityStorageTerminal tile, PanelSyncManager sync, UISettings settings) {
@@ -118,15 +116,16 @@ public class StorageTerminalPanel extends ModularPanel {
     }
 
     private void addSearchField(TerminalGridSyncHandler grid) {
-        searchValue = new StringSyncValue(grid::getSearchText, grid::setSearchText);
-        searchValue.allowC2S(true);
+        if (searchMode.keepText()) grid.setSearchText(TomsConfig.Client.terminalLastSearch);
         child(
-            new TerminalSearchField(() -> searchMode.syncNei()).value(searchValue)
+            new TerminalSearchField(() -> searchMode.syncNei())
+                .value(new StringValue.Dynamic(grid::getSearchText, grid::setSearchText))
                 .autoUpdateOnChange(true)
                 .setFocusOnGuiOpen(searchMode.autoFocus())
+                .padding(3, 0)
                 .invisible()
-                .pos(80, 5)
-                .size(89, 10));
+                .pos(79, 4)
+                .size(90, 12));
     }
 
     private void cycleSearchMode() {
@@ -135,16 +134,8 @@ public class StorageTerminalPanel extends ModularPanel {
     }
 
     private void saveSearchSettings() {
-        String retained = searchMode.keepText() && searchValue != null ? searchValue.getValue() : "";
+        String retained = searchMode.keepText() ? grid.getSearchText() : "";
         TomsConfig.Client.saveTerminalSearchSettings(searchMode, retained);
-    }
-
-    @Override
-    public void onOpen(ModularScreen screen) {
-        super.onOpen(screen);
-        if (searchMode.keepText() && searchValue != null && !TomsConfig.Client.terminalLastSearch.isEmpty()) {
-            searchValue.setValue(TomsConfig.Client.terminalLastSearch, true, true);
-        }
     }
 
     @Override

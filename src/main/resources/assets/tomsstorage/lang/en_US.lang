@@ -63,3 +63,16 @@ message.tomsstorage.wireless_terminal.unbound=Sneak-right-click a terminal to bi
 message.tomsstorage.wireless_terminal.too_far=The bound terminal is out of range.
 message.tomsstorage.wireless_terminal.wrong_dimension=The bound terminal is in another dimension.
 message.tomsstorage.wireless_terminal.missing=The bound terminal no longer exists.
+
+message.tomsstorage.autocraft.disabled=NEI autocrafting is disabled on this server.
+message.tomsstorage.autocraft.unavailable=The crafting terminal is unavailable.
+message.tomsstorage.autocraft.missing_output=Autocrafting could not identify the recipe output.
+message.tomsstorage.autocraft.nothing_to_craft=There was nothing to autocraft.
+message.tomsstorage.autocraft.recipe_cycle=Autocrafting found a circular recipe dependency.
+message.tomsstorage.autocraft.recipe_too_deep=Autocrafting reached the recipe dependency depth limit.
+message.tomsstorage.autocraft.missing_ingredients=There are not enough ingredients to autocraft this recipe.
+message.tomsstorage.autocraft.missing_subrecipe=An ingredient is missing and the terminal has no matching recipe for it.
+message.tomsstorage.autocraft.recipe_mismatch=The available ingredients do not match the requested recipe output.
+message.tomsstorage.autocraft.apply_missing_player_item=Autocrafting stopped because an ingredient changed in your inventory.
+message.tomsstorage.autocraft.apply_missing_intermediate=Autocrafting stopped because an intermediate ingredient was unavailable.
+message.tomsstorage.autocraft.apply_missing_terminal_item=Autocrafting stopped because an ingredient changed in storage.

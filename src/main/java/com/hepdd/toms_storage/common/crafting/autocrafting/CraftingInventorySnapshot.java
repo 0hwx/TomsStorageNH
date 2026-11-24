@@ -53,6 +53,27 @@ public final class CraftingInventorySnapshot {
         return null;
     }
 
+    String describeAvailable(ItemStack[] candidates) {
+        return "storage=" + countMatching(terminalStacks, candidates)
+            + ", player="
+            + countMatching(playerStacks, candidates)
+            + ", intermediate="
+            + countMatching(intermediates, candidates);
+    }
+
+    private static long countMatching(List<Entry> entries, ItemStack[] candidates) {
+        long amount = 0;
+        for (Entry entry : entries) {
+            for (ItemStack candidate : candidates) {
+                if (CraftingStackMatcher.matchesIngredient(candidate, entry.stack)) {
+                    amount += entry.amount;
+                    break;
+                }
+            }
+        }
+        return amount;
+    }
+
     public void release(Extraction extraction) {
         if (extraction == null) return;
         ItemStack stack = extraction.getStack();

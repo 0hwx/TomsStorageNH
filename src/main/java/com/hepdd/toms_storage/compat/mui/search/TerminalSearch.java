@@ -6,68 +6,101 @@ import static com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal.Sorti
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import com.hepdd.toms_storage.client.SearchMatcher;
 import com.hepdd.toms_storage.common.inventory.CachedItemStack;
-import com.hepdd.toms_storage.common.tile.TileEntityStorageTerminal;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public final class TerminalSearch {
 
-    private final Map<CachedItemStack, SearchDocument> searchCache = new HashMap<>();
+    private final Int2ObjectMap<SearchDocument> searchCache = new Int2ObjectOpenHashMap<>();
 
-    public List<CachedItemStack> filter(List<CachedItemStack> source, TileEntityStorageTerminal.SortingTypes sortType,
-        SortDirection sortDirection, String searchText, EntityPlayer player) {
+    public List<Int2ObjectMap.Entry<CachedItemStack>> filter(Int2ObjectMap<CachedItemStack> source,
+        SortingTypes sortType, SortDirection sortDirection, String searchText, EntityPlayer player) {
         String text = searchText == null ? "" : searchText;
         boolean modSearch = text.startsWith("@");
-        Pattern pattern = compilePattern(modSearch ? text.substring(1) : text);
+        boolean tooltipOnly = text.startsWith("#");
+        String query = modSearch || tooltipOnly ? text.substring(1) : text;
+        Pattern pattern = compilePattern(query);
 
-        List<CachedItemStack> result = new ArrayList<>();
-        for (CachedItemStack stack : source) {
-            if (stack == null || stack.stack() == null) continue;
-            if (pattern == null
-                || matches(getSearchDocument(stack.stack(), !modSearch, player), pattern, modSearch, text)) {
-                result.add(stack);
+        List<Int2ObjectMap.Entry<CachedItemStack>> result = new ArrayList<>();
+        for (Int2ObjectMap.Entry<CachedItemStack> entry : source.int2ObjectEntrySet()) {
+            if (pattern == null || matches(entry, pattern, modSearch, tooltipOnly, query, player)) {
+                result.add(entry);
             }
         }
 
-        Map<CachedItemStack, String> names = new HashMap<>(result.size() * 2);
-        for (CachedItemStack stack : result) {
-            names.put(stack, stack.displayName());
-        }
         boolean byName = sortType == SortingTypes.NAME;
         boolean reversed = sortDirection == SortDirection.DESCENDING;
-        Comparator<CachedItemStack> cmp = byName ? Comparator.comparing(names::get)
-            : Comparator.comparingLong(CachedItemStack::count)
+        Comparator<Int2ObjectMap.Entry<CachedItemStack>> byDisplayName = Comparator
+            .comparing(entry -> getSearchDocument(entry).displayName);
+        Comparator<Int2ObjectMap.Entry<CachedItemStack>> cmp = byName ? byDisplayName
+            : Comparator.<Int2ObjectMap.Entry<CachedItemStack>>comparingLong(
+                entry -> entry.getValue()
+                    .count())
                 .reversed()
-                .thenComparing(names::get);
+                .thenComparing(byDisplayName);
         result.sort(reversed ? cmp.reversed() : cmp);
         return result;
     }
 
-    private boolean matches(SearchDocument document, Pattern pattern, boolean modSearch, String text) {
-        if (document == null) return false;
-        if (pattern == null) return true;
+    public void clear() {
+        searchCache.clear();
+    }
+
+    public void forget(int itemId) {
+        searchCache.remove(itemId);
+    }
+
+    private boolean matches(Int2ObjectMap.Entry<CachedItemStack> entry, Pattern pattern, boolean modSearch,
+        boolean tooltipOnly, String query, EntityPlayer player) {
+        SearchDocument document = getSearchDocument(entry);
         if (modSearch) return matchesMod(document, pattern);
-        if (SearchMatcher.matchesName(document.displayName, text, pattern)) return true;
-        if (document.tooltip != null) {
-            for (String line : document.tooltip) {
-                if (SearchMatcher.matchesTooltip(line, text, pattern)) return true;
-            }
+        if (!tooltipOnly && SearchMatcher.matchesName(document.displayName, query, pattern)) return true;
+        if (player == null) return false;
+        if (document.tooltip == null) {
+            document.tooltip = readTooltip(
+                entry.getValue()
+                    .stack(),
+                player,
+                document.displayName);
+        }
+        for (String line : document.tooltip) {
+            if (SearchMatcher.matchesTooltip(line, query, pattern)) return true;
         }
         return false;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static List<String> readTooltip(ItemStack stack, EntityPlayer player, String displayName) {
+        try {
+            List<String> tooltip = stack.copy()
+                .getTooltip(player, false);
+            List<String> lines = new ArrayList<>(tooltip.size());
+            String name = EnumChatFormatting.getTextWithoutFormattingCodes(displayName);
+            for (int i = 0; i < tooltip.size(); i++) {
+                String line = EnumChatFormatting.getTextWithoutFormattingCodes(tooltip.get(i));
+                if (line != null && !line.isEmpty() && (i != 0 || !line.equals(name))) lines.add(line);
+            }
+            return lines;
+        } catch (RuntimeException | LinkageError ignored) {
+            return Collections.emptyList();
+        }
     }
 
     private boolean matchesMod(SearchDocument document, Pattern pattern) {
@@ -104,42 +137,36 @@ public final class TerminalSearch {
         return text.contains("(?") || text.matches(".*\\\\[1-9].*") || text.matches(".*\\)[+*{].*");
     }
 
-    private SearchDocument getSearchDocument(ItemStack stack, boolean includeTooltip, EntityPlayer player) {
-        if (stack == null) return null;
-        CachedItemStack key = new CachedItemStack(stack, 0);
-        SearchDocument document = searchCache.get(key);
-        if (document == null) {
-            String displayName;
-            try {
-                displayName = stack.getDisplayName();
-            } catch (RuntimeException exception) {
-                displayName = "";
-            }
-            List<String> modTexts = new ArrayList<>();
-            try {
-                UniqueIdentifier identifier = GameRegistry.findUniqueIdentifierFor(stack.getItem());
-                if (identifier != null) {
-                    modTexts.add(identifier.modId);
-                    ModContainer mod = Loader.instance()
-                        .getIndexedModList()
-                        .get(identifier.modId);
-                    if (mod != null) modTexts.add(mod.getName());
-                }
-                modTexts.add(
-                    stack.getItem()
-                        .getUnlocalizedName());
-            } catch (RuntimeException ignored) {}
-            document = new SearchDocument(displayName, modTexts);
-            searchCache.put(key, document);
+    private SearchDocument getSearchDocument(Int2ObjectMap.Entry<CachedItemStack> entry) {
+        return searchCache.computeIfAbsent(
+            entry.getIntKey(),
+            ignored -> createSearchDocument(
+                entry.getValue()
+                    .stack()));
+    }
+
+    private SearchDocument createSearchDocument(ItemStack stack) {
+        String displayName;
+        try {
+            displayName = stack.getDisplayName();
+        } catch (RuntimeException exception) {
+            displayName = "";
         }
-        if (includeTooltip && document.tooltip == null && player != null) {
-            try {
-                document.tooltip = new ArrayList<>(stack.getTooltip(player, false));
-            } catch (RuntimeException exception) {
-                document.tooltip = Collections.emptyList();
+        List<String> modTexts = new ArrayList<>();
+        try {
+            UniqueIdentifier identifier = GameRegistry.findUniqueIdentifierFor(stack.getItem());
+            if (identifier != null) {
+                modTexts.add(identifier.modId);
+                ModContainer mod = Loader.instance()
+                    .getIndexedModList()
+                    .get(identifier.modId);
+                if (mod != null) modTexts.add(mod.getName());
             }
-        }
-        return document;
+            modTexts.add(
+                stack.getItem()
+                    .getUnlocalizedName());
+        } catch (RuntimeException ignored) {}
+        return new SearchDocument(displayName, modTexts);
     }
 
     private static final class SearchDocument {

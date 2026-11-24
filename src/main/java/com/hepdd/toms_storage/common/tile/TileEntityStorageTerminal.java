@@ -173,7 +173,7 @@ public class TileEntityStorageTerminal extends TileEntity implements IGuiHolder<
         return StorageUtils.asHandler(getAttachedTile(attach), attach.getOpposite());
     }
 
-    private StorageNetwork getAttachedAccess() {
+    public StorageNetwork getAttachedAccess() {
         ForgeDirection attach = getAttachDirection();
         TileEntity tile = getAttachedTile(attach);
         return tile == null ? null : Capabilities.getCapability(tile, StorageNetwork.class, attach.getOpposite());

@@ -1,6 +1,8 @@
 package com.hepdd.toms_storage.common.crafting.autocrafting;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
@@ -11,6 +13,7 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 
+import com.hepdd.toms_storage.TomsConfig;
 import com.hepdd.toms_storage.common.crafting.CraftingRemainderHandler;
 import com.hepdd.toms_storage.common.crafting.CraftingStackMatcher;
 
@@ -88,7 +91,19 @@ public final class CraftingPlanner {
 
             int need = chunk * perCraftAmount(candidates);
             Extraction extraction = snapshot.reserve(candidates, need);
-            if (extraction == null && allowSubCrafting) {
+            if (extraction == null && chunk == 1 && allowSubCrafting) {
+                if (TomsConfig.debugNeiAutocrafting) {
+                    AutoCraftDebug.log(
+                        "plan " + pattern.getOutput()
+                            + " slot="
+                            + slot
+                            + " needs="
+                            + need
+                            + " candidates="
+                            + Arrays.toString(candidates)
+                            + " available "
+                            + snapshot.describeAvailable(candidates));
+                }
                 CraftOutcome subCraft = craftMissingCandidate(candidates, plan, need, resolving);
                 if (!subCraft.isSuccess()) {
                     release(extracted);
@@ -101,6 +116,10 @@ public final class CraftingPlanner {
                 return CraftOutcome.failure("missing_ingredients");
             }
             extracted[slot] = extraction;
+            if (chunk > 1 && CraftingRemainderHandler.mayReturnRemainder(extraction.getStack())) {
+                release(extracted);
+                return CraftOutcome.failure("requires_single_craft");
+            }
         }
 
         ItemStack result = validate(extracted);
@@ -109,17 +128,21 @@ public final class CraftingPlanner {
             return CraftOutcome.failure("recipe_mismatch");
         }
 
+        List<ItemStack> remainders = new ArrayList<>();
         for (Extraction extraction : extracted) {
             if (extraction == null) continue;
             ItemStack remainder = CraftingRemainderHandler.getRemainder(extraction.getStack());
-            if (remainder != null) snapshot.addIntermediate(remainder);
+            if (remainder != null) {
+                remainders.add(remainder);
+                snapshot.addIntermediate(remainder);
+            }
         }
         if (!finalOutput) {
             ItemStack produced = result.copy();
             produced.stackSize = result.stackSize * chunk;
             snapshot.addIntermediate(produced);
         }
-        plan.addOperation(extracted, result, chunk, finalOutput);
+        plan.addOperation(extracted, remainders, result, chunk, finalOutput);
         return CraftOutcome.success();
     }
 

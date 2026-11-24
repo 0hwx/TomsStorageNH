@@ -1,6 +1,5 @@
 # Tom's Simple Storage 1.7.10 Port
 
-[简体中文](README_zh.md)
 
 Tom's Simple Storage 1.7.10 Port is a lightweight backport of [Tom's Simple Storage](https://github.com/tom5454/Toms-Storage) for Minecraft 1.7.10 and the GT New Horizons ecosystem.
 
@@ -29,7 +28,14 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 - Inventory Connectors combine touching inventories into one storage network.
 - Inventory Trim extends the connected path between inventories.
 - Storage Terminals provide centralized insertion, extraction, sorting and searching.
+- Storage and Crafting Terminals render in their mounted orientation on walls, floors, and ceilings with GTNHLib 0.12.10.
+- Terminal grid transfers use left and right mouse buttons, with Shift for alternate actions.
 - Crafting Terminals add a crafting grid with NEI recipe transfer and auto-crafting integration. A toggle beside the crafting output chooses whether results go to your inventory or into the storage network.
+- NEI recipe transfer and autocrafting can use ingredients anywhere in the connected storage, even while the terminal search hides them.
+- Autocrafting reports server-side failures in chat. It uses recipes from the active NEI bookmark chain and recently successful recipes in the current terminal session to make missing ingredients.
+- NEI autocrafting reuses returned crafting tools within a batch and applies the durability cost set by the tool.
+- Terminals sync the full inventory when opened and send only added or removed stacks and count changes afterward. Search runs on the client, and clicks target the selected stack even if the grid reorders.
+- If your inventory only has room for part of a shift-clicked stack or an autocrafting result, the remainder goes back to storage. If storage is full, it drops at the terminal.
 - Crafting is paid for out of the network, like AE2: the 3x3 is the pattern you arrange, not the stock being eaten, so it stays as you left it and you can keep crafting well past the one stack that fits in it. If the network runs out of an ingredient the grid itself is used instead, and depletes normally. Shift-clicking the result stops at a full stack by default; see `shiftCraftLimit`. Whatever is left in the grid is returned to the network when the terminal is closed.
 - Every terminal shows two bars in its header: slots used out of the network total, and items stored out of the network's capacity. Capacity is summed from each inventory's own slot limit, so a drawer or barrel counts for what it can really hold. Hover either bar for the exact numbers.
 - Wireless Terminals can be bound to a terminal and used within the configured range and dimension.
@@ -37,18 +43,20 @@ NotEnoughCharacters is optional and improves Chinese and pinyin searching.
 
 ### Search
 
-- Searches item names and tooltips; prefix a query with `@` to search by mod.
+- Searches match item names and tooltips. Use `#` for tooltip text only or `@` for mods.
 - Optional NotEnoughCharacters support for Chinese and pinyin matching.
 - One search button cycles through four presets:
   1. Standard search
   2. Auto search
   3. Auto search with retained text
   4. Auto search with retained text and NEI synchronization
+- In NEI synchronization mode, edits in either search field update both the terminal and NEI results.
 - Search state is stored locally, so multiple players using the same terminal do not overwrite each other.
 
 ### Basic Automation
 
 - Inventory Cables connect only to other cables, an Inventory Connector, or the network side of a Basic Inventory Hopper.
+- Cable models show connections on the corresponding block faces.
 - Cables do not directly connect ordinary inventories, machines, terminals or Inventory Trim.
 - Multiple hoppers may share one cable network. A cable network containing multiple Inventory Connectors is disabled as a conflict.
 - The Basic Inventory Hopper transfers one item every 10 ticks and respects sided inventories and redstone disabling.

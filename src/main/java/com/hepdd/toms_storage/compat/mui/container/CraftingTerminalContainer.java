@@ -1,5 +1,8 @@
 package com.hepdd.toms_storage.compat.mui.container;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
@@ -17,6 +20,7 @@ import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftDebug;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftExecutor;
 import com.hepdd.toms_storage.common.crafting.autocrafting.AutoCraftRequest;
 import com.hepdd.toms_storage.common.crafting.autocrafting.CraftOutcome;
+import com.hepdd.toms_storage.common.crafting.autocrafting.CraftingPattern;
 import com.hepdd.toms_storage.common.inventory.TerminalNetworkService;
 import com.hepdd.toms_storage.common.tile.TileEntityCraftingTerminal;
 import com.hepdd.toms_storage.compat.nei.AutoCraftPreviewInventory;
@@ -25,11 +29,13 @@ import com.hepdd.toms_storage.utils.StorageUtils;
 public class CraftingTerminalContainer extends StorageTerminalContainer {
 
     private static final int CRAFT_ALL_GUARD = 1024;
+    private static final int RECENT_RECIPE_LIMIT = 16;
 
     protected final TileEntityCraftingTerminal terminal;
     protected final IItemHandlerModifiable craftingInventory;
     private final InventoryCraftingWrapper inventoryCrafting;
     private final AutoCraftPreviewInventory autoCraftPreview = new AutoCraftPreviewInventory();
+    private final Map<String, CraftingPattern> recentRecipes = new LinkedHashMap<>();
     private ModularCraftingSlot craftingSlot;
     private final TerminalCraftSession craftSession;
 
@@ -49,15 +55,34 @@ public class CraftingTerminalContainer extends StorageTerminalContainer {
         return autoCraftPreview;
     }
 
-    public void runAutoCraft(NBTTagCompound recipeTag) {
-        if (!TomsConfig.neiAutocrafting) return;
-        if (!(getSyncManager().getPlayer() instanceof EntityPlayerMP serverPlayer)) return;
-        AutoCraftRequest request = AutoCraftRequest.fromNbt(recipeTag, true, true);
+    public CraftOutcome runAutoCraft(NBTTagCompound recipeTag) {
+        if (!TomsConfig.neiAutocrafting) return CraftOutcome.failure("disabled");
+        if (!(getSyncManager().getPlayer() instanceof EntityPlayerMP serverPlayer))
+            return CraftOutcome.failure("unavailable");
+        AutoCraftRequest request = AutoCraftRequest.fromNbt(recipeTag, recentRecipes.values(), true, true);
         ItemStack output = request.getOutput();
-        if (output == null || output.stackSize <= 0) return;
+        if (output == null || output.stackSize <= 0) return CraftOutcome.failure("missing_output");
+        if (TomsConfig.debugNeiAutocrafting) AutoCraftDebug.log(
+            "request " + output
+                + " crafts="
+                + request.count()
+                + " patterns="
+                + request.patterns()
+                    .size());
         CraftOutcome outcome = AutoCraftExecutor.execute(request, serverPlayer, terminal);
-        if (!outcome.isSuccess()) AutoCraftDebug.log("autocraft failed: " + outcome.getReason());
+        if (outcome.isSuccess()) {
+            CraftingPattern root = request.root();
+            recentRecipes.remove(root.getKey());
+            recentRecipes.put(root.getKey(), root);
+            if (recentRecipes.size() > RECENT_RECIPE_LIMIT) recentRecipes.remove(
+                recentRecipes.keySet()
+                    .iterator()
+                    .next());
+        } else {
+            AutoCraftDebug.log("autocraft failed: " + outcome.getReason());
+        }
         serverPlayer.inventory.markDirty();
+        return outcome;
     }
 
     @Override
